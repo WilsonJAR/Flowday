@@ -9,7 +9,7 @@ import {
 } from '../utils/dates';
 
 export function usePlannerData() {
-  const { tasks, selectedDate, profile } = useFlowDay();
+  const { tasks, selectedDate, profile, focusSessions } = useFlowDay();
 
   return useMemo(() => {
     const todayTasks = tasks.filter(task => task.date === selectedDate && !task.inInbox);
@@ -49,6 +49,16 @@ export function usePlannerData() {
         inCurrentMonth: isSameMonth(dateKey, selectedDate),
       };
     });
+    const completedFocusSessions = focusSessions.filter(session => session.completed);
+    const focusMinutesThisWeek = completedFocusSessions
+      .filter(session => weekDateKeys.includes(session.date))
+      .reduce((sum, session) => sum + session.durationMinutes, 0);
+    const completedTasksThisWeek = tasks.filter(
+      task =>
+        !task.inInbox &&
+        task.completed &&
+        weekDateKeys.includes(task.date),
+    ).length;
 
     return {
       todayTasks,
@@ -61,6 +71,9 @@ export function usePlannerData() {
       weekOverview,
       monthOverview,
       monthLabel: formatMonthLabel(selectedDate),
+      focusMinutesThisWeek,
+      completedTasksThisWeek,
+      totalFocusSessions: completedFocusSessions.length,
     };
-  }, [profile.weekStartsOn, selectedDate, tasks]);
+  }, [focusSessions, profile.weekStartsOn, selectedDate, tasks]);
 }

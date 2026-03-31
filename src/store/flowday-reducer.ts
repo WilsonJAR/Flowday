@@ -1,5 +1,5 @@
 import { initialTasks } from '../data/mock-data';
-import { EditorState, PlannerProfile, TabKey, Task } from '../types';
+import { EditorState, FocusSession, PlannerProfile, TabKey, Task } from '../types';
 import { getTodayDateKey } from '../utils/dates';
 import {
   defaultPersistedState,
@@ -28,7 +28,8 @@ export type FlowDayAction =
   | { type: 'set_editor_state'; payload: EditorState | null }
   | { type: 'open_editor'; payload: EditorState }
   | { type: 'close_editor' }
-  | { type: 'set_tasks'; payload: Task[] };
+  | { type: 'set_tasks'; payload: Task[] }
+  | { type: 'set_focus_sessions'; payload: FocusSession[] };
 
 export function createInitialFlowDayState(initialDarkMode: boolean): FlowDayState {
   return {
@@ -36,6 +37,7 @@ export function createInitialFlowDayState(initialDarkMode: boolean): FlowDayStat
     version: FLOWDAY_STORAGE_VERSION,
     selectedDate: getTodayDateKey(),
     tasks: initialTasks,
+    focusSessions: [],
     isDarkMode: initialDarkMode,
     onboardingCompleted: false,
     profile: defaultPersistedState.profile,
@@ -105,6 +107,11 @@ export function flowDayReducer(state: FlowDayState, action: FlowDayAction): Flow
       return {
         ...state,
         tasks: action.payload,
+      };
+    case 'set_focus_sessions':
+      return {
+        ...state,
+        focusSessions: action.payload,
       };
     default:
       return state;

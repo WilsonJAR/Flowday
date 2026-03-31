@@ -5,12 +5,13 @@ import {
   FLOWDAY_STORAGE_VERSION,
   FlowDayPersistedState,
 } from '../../store/app-state';
-import { TabKey, Task } from '../../types';
+import { FocusSession, TabKey, Task } from '../../types';
 
 type LegacyState = {
   activeTab?: TabKey;
   selectedDate?: string;
   tasks?: Task[];
+  focusSessions?: FocusSession[];
   isDarkMode?: boolean;
   onboardingCompleted?: boolean;
   profile?: Partial<FlowDayPersistedState['profile']>;
@@ -24,6 +25,9 @@ function normalizePersistedState(
     activeTab: rawState.activeTab ?? defaultPersistedState.activeTab,
     selectedDate: rawState.selectedDate ?? defaultPersistedState.selectedDate,
     tasks: Array.isArray(rawState.tasks) ? rawState.tasks : defaultPersistedState.tasks,
+    focusSessions: Array.isArray(rawState.focusSessions)
+      ? rawState.focusSessions
+      : defaultPersistedState.focusSessions,
     isDarkMode:
       typeof rawState.isDarkMode === 'boolean'
         ? rawState.isDarkMode

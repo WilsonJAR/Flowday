@@ -1,5 +1,11 @@
 import React, { createContext, useContext, useEffect, useReducer } from 'react';
-import { EditorState, PlannerProfile, TabKey, Task } from '../types';
+import {
+  EditorState,
+  FocusSession,
+  PlannerProfile,
+  TabKey,
+  Task,
+} from '../types';
 import {
   loadPersistedState,
   savePersistedState,
@@ -14,18 +20,23 @@ type FlowDayContextValue = {
   activeTab: TabKey;
   selectedDate: string;
   tasks: Task[];
+  focusSessions: FocusSession[];
   profile: PlannerProfile;
   editorVisible: boolean;
   editorState: EditorState | null;
   isDarkMode: boolean;
   isHydrated: boolean;
   onboardingCompleted: boolean;
+  activeFocusTaskId: string | null;
   setActiveTab: (tab: TabKey) => void;
   setSelectedDate: (dateKey: string) => void;
   setIsDarkMode: (value: boolean) => void;
   setEditorState: (state: EditorState | null) => void;
   completeOnboarding: (profile: PlannerProfile) => void;
   reopenOnboarding: () => void;
+  startFocusSession: (task: Task) => void;
+  completeFocusSession: (taskId: string) => void;
+  cancelFocusSession: () => void;
   openCreateModal: (inInbox?: boolean) => void;
   openEditModal: (task: Task) => void;
   closeEditor: () => void;
@@ -54,6 +65,7 @@ export function FlowDayProvider({
     activeTab,
     selectedDate,
     tasks,
+    focusSessions,
     profile,
     editorVisible,
     editorState,
@@ -61,6 +73,8 @@ export function FlowDayProvider({
     isHydrated,
     onboardingCompleted,
   } = state;
+  const activeFocusSession = focusSessions.find(session => !session.endedAt) ?? null;
+  const activeFocusTaskId = activeFocusSession?.taskId ?? null;
 
   useEffect(() => {
     let mounted = true;
@@ -105,6 +119,7 @@ export function FlowDayProvider({
           activeTab,
           selectedDate,
           tasks,
+          focusSessions,
           isDarkMode,
           onboardingCompleted,
           profile,
@@ -115,7 +130,16 @@ export function FlowDayProvider({
     };
 
     persistState();
-  }, [activeTab, isDarkMode, isHydrated, onboardingCompleted, profile, selectedDate, tasks]);
+  }, [
+    activeTab,
+    focusSessions,
+    isDarkMode,
+    isHydrated,
+    onboardingCompleted,
+    profile,
+    selectedDate,
+    tasks,
+  ]);
 
   const openCreateModal = (inInbox = false) => {
     dispatch({
@@ -264,16 +288,61 @@ export function FlowDayProvider({
     dispatch({ type: 'set_active_tab', payload: 'today' });
   };
 
+  const startFocusSession = (task: Task) => {
+    const nextSessions = [
+      ...focusSessions.filter(session => session.endedAt),
+      {
+        id: `focus-${Date.now()}`,
+        taskId: task.id,
+        taskTitle: task.title,
+        date: selectedDate,
+        startedAt: new Date().toISOString(),
+        durationMinutes: task.durationMinutes ?? profile.defaultDurationMinutes,
+        completed: false,
+      },
+    ];
+    dispatch({ type: 'set_focus_sessions', payload: nextSessions });
+  };
+
+  const completeFocusSession = (taskId: string) => {
+    const nextSessions = focusSessions.map(session =>
+      !session.endedAt && session.taskId === taskId
+        ? {
+            ...session,
+            endedAt: new Date().toISOString(),
+            completed: true,
+          }
+        : session,
+    );
+    dispatch({ type: 'set_focus_sessions', payload: nextSessions });
+    toggleTaskComplete(taskId);
+  };
+
+  const cancelFocusSession = () => {
+    const nextSessions = focusSessions.map(session =>
+      !session.endedAt
+        ? {
+            ...session,
+            endedAt: new Date().toISOString(),
+            completed: false,
+          }
+        : session,
+    );
+    dispatch({ type: 'set_focus_sessions', payload: nextSessions });
+  };
+
   const value = {
     activeTab,
     selectedDate,
     tasks,
+    focusSessions,
     profile,
     editorVisible,
     editorState,
     isDarkMode,
     isHydrated,
     onboardingCompleted,
+    activeFocusTaskId,
     setActiveTab: (tab: TabKey) => dispatch({ type: 'set_active_tab', payload: tab }),
     setSelectedDate: (dateKey: string) =>
       dispatch({ type: 'set_selected_date', payload: dateKey }),
@@ -284,6 +353,9 @@ export function FlowDayProvider({
     completeOnboarding: (nextProfile: PlannerProfile) =>
       dispatch({ type: 'complete_onboarding', payload: nextProfile }),
     reopenOnboarding: () => dispatch({ type: 'reopen_onboarding' }),
+    startFocusSession,
+    completeFocusSession,
+    cancelFocusSession,
     openCreateModal,
     openEditModal,
     closeEditor,

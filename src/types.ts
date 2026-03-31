@@ -71,3 +71,14 @@ export type PlannerProfile = {
   defaultDurationMinutes: number;
   weekStartsOn: WeekStartsOn;
 };
+
+export type FocusSession = {
+  id: string;
+  taskId: string;
+  taskTitle: string;
+  date: string;
+  startedAt: string;
+  endedAt?: string;
+  durationMinutes: number;
+  completed: boolean;
+};

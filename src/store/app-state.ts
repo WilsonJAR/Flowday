@@ -1,4 +1,4 @@
-import { PlannerProfile, TabKey, Task } from '../types';
+import { FocusSession, PlannerProfile, TabKey, Task } from '../types';
 
 export const FLOWDAY_STORAGE_KEY = '@flowday/app-state';
 export const FLOWDAY_STORAGE_VERSION = 1;
@@ -8,6 +8,7 @@ export type FlowDayPersistedState = {
   activeTab: TabKey;
   selectedDate: string;
   tasks: Task[];
+  focusSessions: FocusSession[];
   isDarkMode: boolean;
   onboardingCompleted: boolean;
   profile: PlannerProfile;
@@ -22,6 +23,7 @@ export const defaultPersistedState: FlowDayPersistedState = {
   activeTab: 'today',
   selectedDate: new Date().toISOString().slice(0, 10),
   tasks: [],
+  focusSessions: [],
   isDarkMode: false,
   onboardingCompleted: false,
   profile: {

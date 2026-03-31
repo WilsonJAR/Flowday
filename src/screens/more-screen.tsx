@@ -7,6 +7,9 @@ export function MoreScreen({
   isDarkMode,
   profile,
   onboardingCompleted,
+  focusMinutesThisWeek,
+  completedTasksThisWeek,
+  totalFocusSessions,
   onToggleTheme,
   onOpenOnboarding,
 }: {
@@ -14,6 +17,9 @@ export function MoreScreen({
   isDarkMode: boolean;
   profile: PlannerProfile;
   onboardingCompleted: boolean;
+  focusMinutesThisWeek: number;
+  completedTasksThisWeek: number;
+  totalFocusSessions: number;
   onToggleTheme: (value: boolean) => void;
   onOpenOnboarding: () => void;
 }) {
@@ -83,6 +89,26 @@ export function MoreScreen({
           {String(profile.dayEndHour).padStart(2, '0')}:00 · {profile.defaultDurationMinutes} min
         </Text>
       </Pressable>
+
+      <View
+        style={[
+          styles.profileCard,
+          {
+            backgroundColor: theme.surface,
+            borderColor: theme.border,
+          },
+        ]}>
+        <Text style={[styles.profileTitle, { color: theme.text }]}>Estadísticas rápidas</Text>
+        <Text style={[styles.profileSubtitle, { color: theme.textMuted }]}>
+          Foco esta semana: {focusMinutesThisWeek} min
+        </Text>
+        <Text style={[styles.profileSubtitle, { color: theme.textMuted }]}>
+          Tareas completadas: {completedTasksThisWeek}
+        </Text>
+        <Text style={[styles.profileSubtitle, { color: theme.textMuted }]}>
+          Sesiones cerradas: {totalFocusSessions}
+        </Text>
+      </View>
 
       {items.map(item => (
         <View

@@ -32,6 +32,7 @@ export function TodayScreen({
   onDuplicateTask,
   onMoveToInbox,
   onSelectDate,
+  onStartFocus,
 }: {
   theme: Theme;
   selectedDate: string;
@@ -45,6 +46,7 @@ export function TodayScreen({
   onDuplicateTask: (taskId: string) => void;
   onMoveToInbox: (taskId: string) => void;
   onSelectDate: (dateKey: string) => void;
+  onStartFocus: (task: Task) => void;
 }) {
   const visibleHours = Array.from(
     { length: TIMELINE_END_HOUR - TIMELINE_START_HOUR + 1 },
@@ -264,6 +266,13 @@ export function TodayScreen({
                       color={theme.accent}
                       onPress={() => onMoveToInbox(task.id)}
                     />
+                    {!task.completed ? (
+                      <MiniAction
+                        label="Focus"
+                        color={category.color}
+                        onPress={() => onStartFocus(task)}
+                      />
+                    ) : null}
                   </View>
                 </Pressable>
               );

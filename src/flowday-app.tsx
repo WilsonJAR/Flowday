@@ -13,6 +13,7 @@ import { BottomNavigation } from './components/bottom-navigation';
 import { TaskEditorModal } from './components/task-editor-modal';
 import { usePlannerData } from './hooks/use-planner-data';
 import { InboxScreen } from './screens/inbox-screen';
+import { FocusScreen } from './screens/focus-screen';
 import { MoreScreen } from './screens/more-screen';
 import { OnboardingScreen } from './screens/onboarding-screen';
 import { TodayScreen } from './screens/today-screen';
@@ -84,8 +85,14 @@ function AppTabBar({
 }
 
 function TodayTabScreen() {
-  const { openEditModal, toggleTaskComplete, duplicateTask, moveTaskToInbox, isDarkMode } =
-    useFlowDay();
+  const {
+    openEditModal,
+    toggleTaskComplete,
+    duplicateTask,
+    moveTaskToInbox,
+    startFocusSession,
+    isDarkMode,
+  } = useFlowDay();
   const { todayTasks, selectedDate, completionRate, plannedMinutes, loadLabel, nextTask } =
     usePlannerData();
   const { setSelectedDate } = useFlowDay();
@@ -105,6 +112,7 @@ function TodayTabScreen() {
       onDuplicateTask={duplicateTask}
       onMoveToInbox={moveTaskToInbox}
       onSelectDate={setSelectedDate}
+      onStartFocus={startFocusSession}
     />
   );
 }
@@ -149,6 +157,7 @@ function MoreTabScreen() {
     onboardingCompleted,
     reopenOnboarding,
   } = useFlowDay();
+  const { focusMinutesThisWeek, completedTasksThisWeek, totalFocusSessions } = usePlannerData();
   const theme = isDarkMode ? darkTheme : lightTheme;
 
   return (
@@ -157,6 +166,9 @@ function MoreTabScreen() {
       isDarkMode={isDarkMode}
       profile={profile}
       onboardingCompleted={onboardingCompleted}
+      focusMinutesThisWeek={focusMinutesThisWeek}
+      completedTasksThisWeek={completedTasksThisWeek}
+      totalFocusSessions={totalFocusSessions}
       onToggleTheme={setIsDarkMode}
       onOpenOnboarding={reopenOnboarding}
     />
@@ -172,6 +184,9 @@ function FlowDayShell() {
     isHydrated,
     onboardingCompleted,
     profile,
+    activeFocusTaskId,
+    completeFocusSession,
+    cancelFocusSession,
     setActiveTab,
     setEditorState,
     completeOnboarding,
@@ -179,8 +194,12 @@ function FlowDayShell() {
     closeEditor,
     saveTask,
   } = useFlowDay();
+  const { todayTasks } = usePlannerData();
   const theme = isDarkMode ? darkTheme : lightTheme;
   const navigationRef = useNavigationContainerRef<RootTabParamList>();
+  const activeFocusTask =
+    todayTasks.find(task => task.id === activeFocusTaskId) ??
+    null;
 
   useEffect(() => {
     if (!isHydrated || !navigationRef.isReady()) {
@@ -219,6 +238,24 @@ function FlowDayShell() {
           theme={theme}
           initialProfile={profile}
           onComplete={completeOnboarding}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  if (activeFocusTask) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
+        <StatusBar
+          barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+          backgroundColor={theme.background}
+        />
+        <FocusScreen
+          theme={theme}
+          task={activeFocusTask}
+          durationMinutes={activeFocusTask.durationMinutes ?? profile.defaultDurationMinutes}
+          onComplete={() => completeFocusSession(activeFocusTask.id)}
+          onCancel={cancelFocusSession}
         />
       </SafeAreaView>
     );
