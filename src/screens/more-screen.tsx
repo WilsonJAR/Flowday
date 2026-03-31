@@ -11,6 +11,7 @@ export function MoreScreen({
   completedTasksThisWeek,
   totalFocusSessions,
   onToggleTheme,
+  onToggleNotifications,
   onOpenOnboarding,
 }: {
   theme: Theme;
@@ -21,6 +22,7 @@ export function MoreScreen({
   completedTasksThisWeek: number;
   totalFocusSessions: number;
   onToggleTheme: (value: boolean) => void;
+  onToggleNotifications: (value: boolean) => void;
   onOpenOnboarding: () => void;
 }) {
   const items = [
@@ -45,7 +47,17 @@ export function MoreScreen({
     {
       icon: '◔',
       title: 'Notificaciones',
-      subtitle: 'Configurar recordatorios',
+      subtitle: profile.notificationsEnabled
+        ? `Activas · ${profile.defaultReminderMinutes ?? 'sin'} min por defecto`
+        : 'Desactivadas',
+      trailing: (
+        <Switch
+          value={profile.notificationsEnabled}
+          onValueChange={onToggleNotifications}
+          trackColor={{ false: theme.border, true: theme.accent }}
+          thumbColor="#FFFFFF"
+        />
+      ),
     },
     {
       icon: '☷',

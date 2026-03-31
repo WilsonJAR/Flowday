@@ -10,6 +10,7 @@ const userTypeOptions: Array<{ value: UserType; label: string; description: stri
 ];
 
 const durationOptions = [30, 45, 60, 90];
+const reminderOptions = [null, 5, 10, 15, 30];
 
 export function OnboardingScreen({
   theme,
@@ -111,6 +112,20 @@ export function OnboardingScreen({
         ))}
       </PickerCard>
 
+      <PickerCard theme={theme} label="Recordatorio por defecto">
+        {reminderOptions.map(option => (
+          <ChoicePill
+            key={String(option)}
+            theme={theme}
+            selected={profile.defaultReminderMinutes === option}
+            label={option === null ? 'Sin aviso' : `${option} min antes`}
+            onPress={() =>
+              setProfile(current => ({ ...current, defaultReminderMinutes: option }))
+            }
+          />
+        ))}
+      </PickerCard>
+
       <PickerCard theme={theme} label="Inicio de semana">
         {(['monday', 'sunday'] as WeekStartsOn[]).map(option => (
           <ChoicePill
@@ -121,6 +136,20 @@ export function OnboardingScreen({
             onPress={() => setProfile(current => ({ ...current, weekStartsOn: option }))}
           />
         ))}
+      </PickerCard>
+
+      <PickerCard theme={theme} label="Notificaciones">
+        <ChoicePill
+          theme={theme}
+          selected={profile.notificationsEnabled}
+          label={profile.notificationsEnabled ? 'Activadas' : 'Desactivadas'}
+          onPress={() =>
+            setProfile(current => ({
+              ...current,
+              notificationsEnabled: !current.notificationsEnabled,
+            }))
+          }
+        />
       </PickerCard>
 
       <Pressable

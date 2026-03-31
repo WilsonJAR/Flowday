@@ -20,6 +20,7 @@ export type Task = {
   startHour?: number;
   startMinute?: number;
   durationMinutes?: number;
+  reminderMinutesBefore?: number | null;
   date: string;
   notes?: string;
   completed: boolean;
@@ -59,6 +60,7 @@ export type EditorState = {
   startHour: number;
   startMinute: number;
   durationMinutes: number;
+  reminderMinutesBefore: number | null;
   notes: string;
   isAllDay: boolean;
   inInbox: boolean;
@@ -69,6 +71,8 @@ export type PlannerProfile = {
   dayStartHour: number;
   dayEndHour: number;
   defaultDurationMinutes: number;
+  defaultReminderMinutes: number | null;
+  notificationsEnabled: boolean;
   weekStartsOn: WeekStartsOn;
 };
 

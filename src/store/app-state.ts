@@ -31,6 +31,8 @@ export const defaultPersistedState: FlowDayPersistedState = {
     dayStartHour: 7,
     dayEndHour: 22,
     defaultDurationMinutes: 60,
+    defaultReminderMinutes: 10,
+    notificationsEnabled: true,
     weekStartsOn: 'monday',
   },
 };

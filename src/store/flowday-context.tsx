@@ -11,6 +11,12 @@ import {
   savePersistedState,
 } from '../services/storage/flowday-storage';
 import {
+  cancelFocusNotification,
+  requestNotificationPermission,
+  scheduleFocusNotification,
+  syncTaskReminders,
+} from '../services/notifications/notifee-service';
+import {
   createInitialFlowDayState,
   flowDayReducer,
 } from './flowday-reducer';
@@ -108,7 +114,7 @@ export function FlowDayProvider({
   }, []);
 
   useEffect(() => {
-    if (!isHydrated) {
+    if (!isHydrated || !onboardingCompleted) {
       return;
     }
 
@@ -141,6 +147,23 @@ export function FlowDayProvider({
     tasks,
   ]);
 
+  useEffect(() => {
+    if (!isHydrated) {
+      return;
+    }
+
+    const syncNotifications = async () => {
+      if (profile.notificationsEnabled) {
+        await requestNotificationPermission();
+      }
+      await syncTaskReminders(tasks, profile.notificationsEnabled);
+    };
+
+    syncNotifications().catch(error => {
+      console.warn('Failed to sync reminders', error);
+    });
+  }, [isHydrated, onboardingCompleted, profile.notificationsEnabled, tasks]);
+
   const openCreateModal = (inInbox = false) => {
     dispatch({
       type: 'open_editor',
@@ -151,6 +174,9 @@ export function FlowDayProvider({
         startHour: profile.dayStartHour,
         startMinute: 0,
         durationMinutes: profile.defaultDurationMinutes,
+        reminderMinutesBefore: profile.notificationsEnabled
+          ? profile.defaultReminderMinutes
+          : null,
         notes: '',
         isAllDay: false,
         inInbox,
@@ -169,6 +195,7 @@ export function FlowDayProvider({
         startHour: task.startHour ?? 9,
         startMinute: task.startMinute ?? 0,
         durationMinutes: task.durationMinutes ?? 60,
+        reminderMinutesBefore: task.reminderMinutesBefore ?? null,
         notes: task.notes ?? '',
         isAllDay: !!task.isAllDay,
         inInbox: !!task.inInbox,
@@ -197,6 +224,8 @@ export function FlowDayProvider({
         editorState.inInbox || editorState.isAllDay
           ? undefined
           : editorState.durationMinutes,
+      reminderMinutesBefore:
+        editorState.inInbox || editorState.isAllDay ? null : editorState.reminderMinutesBefore,
       notes: editorState.notes.trim(),
       completed: false,
       date: selectedDate,
@@ -289,19 +318,25 @@ export function FlowDayProvider({
   };
 
   const startFocusSession = (task: Task) => {
+    const nextSession: FocusSession = {
+      id: `focus-${Date.now()}`,
+      taskId: task.id,
+      taskTitle: task.title,
+      date: selectedDate,
+      startedAt: new Date().toISOString(),
+      durationMinutes: task.durationMinutes ?? profile.defaultDurationMinutes,
+      completed: false,
+    };
     const nextSessions = [
       ...focusSessions.filter(session => session.endedAt),
-      {
-        id: `focus-${Date.now()}`,
-        taskId: task.id,
-        taskTitle: task.title,
-        date: selectedDate,
-        startedAt: new Date().toISOString(),
-        durationMinutes: task.durationMinutes ?? profile.defaultDurationMinutes,
-        completed: false,
-      },
+      nextSession,
     ];
     dispatch({ type: 'set_focus_sessions', payload: nextSessions });
+    if (profile.notificationsEnabled) {
+      scheduleFocusNotification(nextSession).catch(error => {
+        console.warn('Failed to schedule focus notification', error);
+      });
+    }
   };
 
   const completeFocusSession = (taskId: string) => {
@@ -315,6 +350,7 @@ export function FlowDayProvider({
         : session,
     );
     dispatch({ type: 'set_focus_sessions', payload: nextSessions });
+    cancelFocusNotification().catch(() => {});
     toggleTaskComplete(taskId);
   };
 
@@ -329,6 +365,7 @@ export function FlowDayProvider({
         : session,
     );
     dispatch({ type: 'set_focus_sessions', payload: nextSessions });
+    cancelFocusNotification().catch(() => {});
   };
 
   const value = {

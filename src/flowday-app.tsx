@@ -156,6 +156,7 @@ function MoreTabScreen() {
     profile,
     onboardingCompleted,
     reopenOnboarding,
+    completeOnboarding,
   } = useFlowDay();
   const { focusMinutesThisWeek, completedTasksThisWeek, totalFocusSessions } = usePlannerData();
   const theme = isDarkMode ? darkTheme : lightTheme;
@@ -170,6 +171,9 @@ function MoreTabScreen() {
       completedTasksThisWeek={completedTasksThisWeek}
       totalFocusSessions={totalFocusSessions}
       onToggleTheme={setIsDarkMode}
+      onToggleNotifications={value =>
+        completeOnboarding({ ...profile, notificationsEnabled: value })
+      }
       onOpenOnboarding={reopenOnboarding}
     />
   );

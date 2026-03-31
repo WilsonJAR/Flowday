@@ -12,6 +12,8 @@ import { categories, durationOptions, hourOptions, minuteOptions } from '../cons
 import { EditorState, EnergyLevel, Theme } from '../types';
 import { durationLabel, energyLabel } from '../utils/planner';
 
+const reminderOptions: Array<number | null> = [null, 5, 10, 15, 30, 60];
+
 export function TaskEditorModal({
   visible,
   theme,
@@ -207,6 +209,37 @@ export function TaskEditorModal({
                     ]}>
                     <Text style={[styles.energyChipText, energyChipTextStyle]}>
                       {energyLabel(level)}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>
+              Recordatorio
+            </Text>
+            <View style={styles.energyRow}>
+              {reminderOptions.map(option => {
+                const selected = editorState.reminderMinutesBefore === option;
+                const label = option === null ? 'No' : `${option}m`;
+                return (
+                  <Pressable
+                    key={String(option)}
+                    onPress={() =>
+                      onChange({ ...editorState, reminderMinutesBefore: option })
+                    }
+                    style={[
+                      styles.energyChip,
+                      {
+                        backgroundColor: selected ? theme.accent : theme.surfaceMuted,
+                      },
+                    ]}>
+                    <Text
+                      style={[
+                        styles.energyChipText,
+                        selected ? styles.selectedChipText : { color: theme.text },
+                      ]}>
+                      {label}
                     </Text>
                   </Pressable>
                 );
