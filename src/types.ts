@@ -1,4 +1,6 @@
 export type TabKey = 'today' | 'inbox' | 'week' | 'more';
+export type UserType = 'student' | 'professional' | 'freelancer' | 'routine';
+export type WeekStartsOn = 'monday' | 'sunday';
 
 export type CategoryId =
   | 'study'
@@ -60,4 +62,12 @@ export type EditorState = {
   notes: string;
   isAllDay: boolean;
   inInbox: boolean;
+};
+
+export type PlannerProfile = {
+  userType: UserType;
+  dayStartHour: number;
+  dayEndHour: number;
+  defaultDurationMinutes: number;
+  weekStartsOn: WeekStartsOn;
 };

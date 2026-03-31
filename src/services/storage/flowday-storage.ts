@@ -12,6 +12,8 @@ type LegacyState = {
   selectedDate?: string;
   tasks?: Task[];
   isDarkMode?: boolean;
+  onboardingCompleted?: boolean;
+  profile?: Partial<FlowDayPersistedState['profile']>;
 };
 
 function normalizePersistedState(
@@ -26,6 +28,14 @@ function normalizePersistedState(
       typeof rawState.isDarkMode === 'boolean'
         ? rawState.isDarkMode
         : defaultPersistedState.isDarkMode,
+    onboardingCompleted:
+      typeof rawState.onboardingCompleted === 'boolean'
+        ? rawState.onboardingCompleted
+        : defaultPersistedState.onboardingCompleted,
+    profile: {
+      ...defaultPersistedState.profile,
+      ...rawState.profile,
+    },
   };
 }
 

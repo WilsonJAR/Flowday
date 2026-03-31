@@ -1,15 +1,21 @@
 import React from 'react';
-import { ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
-import { Theme } from '../types';
+import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { PlannerProfile, Theme } from '../types';
 
 export function MoreScreen({
   theme,
   isDarkMode,
+  profile,
+  onboardingCompleted,
   onToggleTheme,
+  onOpenOnboarding,
 }: {
   theme: Theme;
   isDarkMode: boolean;
+  profile: PlannerProfile;
+  onboardingCompleted: boolean;
   onToggleTheme: (value: boolean) => void;
+  onOpenOnboarding: () => void;
 }) {
   const items = [
     {
@@ -60,6 +66,24 @@ export function MoreScreen({
         </Text>
       </View>
 
+      <Pressable
+        onPress={onOpenOnboarding}
+        style={[
+          styles.profileCard,
+          {
+            backgroundColor: theme.surfaceMuted,
+            borderColor: theme.border,
+          },
+        ]}>
+        <Text style={[styles.profileTitle, { color: theme.text }]}>
+          {onboardingCompleted ? 'Perfil de planificación' : 'Completar onboarding'}
+        </Text>
+        <Text style={[styles.profileSubtitle, { color: theme.textMuted }]}>
+          {profile.userType} · {String(profile.dayStartHour).padStart(2, '0')}:00-
+          {String(profile.dayEndHour).padStart(2, '0')}:00 · {profile.defaultDurationMinutes} min
+        </Text>
+      </Pressable>
+
       {items.map(item => (
         <View
           key={item.title}
@@ -107,6 +131,21 @@ const styles = StyleSheet.create({
     letterSpacing: -0.4,
   },
   pageSubtitle: {
+    marginTop: 6,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  profileCard: {
+    borderRadius: 22,
+    borderWidth: 1,
+    padding: 16,
+    marginBottom: 14,
+  },
+  profileTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+  },
+  profileSubtitle: {
     marginTop: 6,
     fontSize: 14,
     fontWeight: '500',

@@ -1,3 +1,5 @@
+import { WeekStartsOn } from '../types';
+
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 function toLocalDate(dateKey: string) {
@@ -13,23 +15,26 @@ export function shiftDateKey(dateKey: string, offsetDays: number) {
   return nextDate.toISOString().slice(0, 10);
 }
 
-export function getStartOfWeek(dateKey: string) {
+export function getStartOfWeek(dateKey: string, weekStartsOn: WeekStartsOn = 'monday') {
   const date = toLocalDate(dateKey);
   const weekday = date.getDay();
+  if (weekStartsOn === 'sunday') {
+    return shiftDateKey(dateKey, -weekday);
+  }
   const diffToMonday = weekday === 0 ? -6 : 1 - weekday;
   return shiftDateKey(dateKey, diffToMonday);
 }
 
-export function getWeekDateKeys(dateKey: string) {
-  const start = getStartOfWeek(dateKey);
+export function getWeekDateKeys(dateKey: string, weekStartsOn: WeekStartsOn = 'monday') {
+  const start = getStartOfWeek(dateKey, weekStartsOn);
   return Array.from({ length: 7 }, (_, index) => shiftDateKey(start, index));
 }
 
-export function getMonthDateKeys(dateKey: string) {
+export function getMonthDateKeys(dateKey: string, weekStartsOn: WeekStartsOn = 'monday') {
   const date = toLocalDate(dateKey);
   const monthStart = new Date(date.getFullYear(), date.getMonth(), 1, 12);
   const monthStartKey = monthStart.toISOString().slice(0, 10);
-  const gridStart = getStartOfWeek(monthStartKey);
+  const gridStart = getStartOfWeek(monthStartKey, weekStartsOn);
   return Array.from({ length: 35 }, (_, index) => shiftDateKey(gridStart, index));
 }
 

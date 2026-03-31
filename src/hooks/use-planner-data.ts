@@ -9,7 +9,7 @@ import {
 } from '../utils/dates';
 
 export function usePlannerData() {
-  const { tasks, selectedDate } = useFlowDay();
+  const { tasks, selectedDate, profile } = useFlowDay();
 
   return useMemo(() => {
     const todayTasks = tasks.filter(task => task.date === selectedDate && !task.inInbox);
@@ -25,7 +25,7 @@ export function usePlannerData() {
     const loadLabel = getLoadLabel(todayTasks);
     const nextTask =
       todayTasks.find(task => !task.completed && typeof task.startHour === 'number') ?? null;
-    const weekDateKeys = getWeekDateKeys(selectedDate);
+    const weekDateKeys = getWeekDateKeys(selectedDate, profile.weekStartsOn);
     const weekOverview = weekDateKeys.map(dateKey => {
       const dayTasks = tasks.filter(task => task.date === dateKey && !task.inInbox);
       const plannedMinutesForDay = dayTasks.reduce(
@@ -39,7 +39,7 @@ export function usePlannerData() {
         plannedMinutes: plannedMinutesForDay,
       };
     });
-    const monthDateKeys = getMonthDateKeys(selectedDate);
+    const monthDateKeys = getMonthDateKeys(selectedDate, profile.weekStartsOn);
     const monthOverview = monthDateKeys.map(dateKey => {
       const dayTasks = tasks.filter(task => task.date === dateKey && !task.inInbox);
       return {
@@ -62,5 +62,5 @@ export function usePlannerData() {
       monthOverview,
       monthLabel: formatMonthLabel(selectedDate),
     };
-  }, [selectedDate, tasks]);
+  }, [profile.weekStartsOn, selectedDate, tasks]);
 }

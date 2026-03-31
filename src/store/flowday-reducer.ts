@@ -1,5 +1,5 @@
 import { initialTasks } from '../data/mock-data';
-import { EditorState, TabKey, Task } from '../types';
+import { EditorState, PlannerProfile, TabKey, Task } from '../types';
 import { getTodayDateKey } from '../utils/dates';
 import {
   defaultPersistedState,
@@ -23,6 +23,8 @@ export type FlowDayAction =
   | { type: 'set_active_tab'; payload: TabKey }
   | { type: 'set_selected_date'; payload: string }
   | { type: 'set_dark_mode'; payload: boolean }
+  | { type: 'complete_onboarding'; payload: PlannerProfile }
+  | { type: 'reopen_onboarding' }
   | { type: 'set_editor_state'; payload: EditorState | null }
   | { type: 'open_editor'; payload: EditorState }
   | { type: 'close_editor' }
@@ -35,6 +37,8 @@ export function createInitialFlowDayState(initialDarkMode: boolean): FlowDayStat
     selectedDate: getTodayDateKey(),
     tasks: initialTasks,
     isDarkMode: initialDarkMode,
+    onboardingCompleted: false,
+    profile: defaultPersistedState.profile,
     isHydrated: false,
     editorVisible: false,
     editorState: null,
@@ -68,6 +72,17 @@ export function flowDayReducer(state: FlowDayState, action: FlowDayAction): Flow
       return {
         ...state,
         isDarkMode: action.payload,
+      };
+    case 'complete_onboarding':
+      return {
+        ...state,
+        onboardingCompleted: true,
+        profile: action.payload,
+      };
+    case 'reopen_onboarding':
+      return {
+        ...state,
+        onboardingCompleted: false,
       };
     case 'set_editor_state':
       return {

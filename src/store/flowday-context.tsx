@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useReducer } from 'react';
-import { EditorState, TabKey, Task } from '../types';
+import { EditorState, PlannerProfile, TabKey, Task } from '../types';
 import {
   loadPersistedState,
   savePersistedState,
@@ -14,14 +14,18 @@ type FlowDayContextValue = {
   activeTab: TabKey;
   selectedDate: string;
   tasks: Task[];
+  profile: PlannerProfile;
   editorVisible: boolean;
   editorState: EditorState | null;
   isDarkMode: boolean;
   isHydrated: boolean;
+  onboardingCompleted: boolean;
   setActiveTab: (tab: TabKey) => void;
   setSelectedDate: (dateKey: string) => void;
   setIsDarkMode: (value: boolean) => void;
   setEditorState: (state: EditorState | null) => void;
+  completeOnboarding: (profile: PlannerProfile) => void;
+  reopenOnboarding: () => void;
   openCreateModal: (inInbox?: boolean) => void;
   openEditModal: (task: Task) => void;
   closeEditor: () => void;
@@ -50,10 +54,12 @@ export function FlowDayProvider({
     activeTab,
     selectedDate,
     tasks,
+    profile,
     editorVisible,
     editorState,
     isDarkMode,
     isHydrated,
+    onboardingCompleted,
   } = state;
 
   useEffect(() => {
@@ -100,6 +106,8 @@ export function FlowDayProvider({
           selectedDate,
           tasks,
           isDarkMode,
+          onboardingCompleted,
+          profile,
         });
       } catch (error) {
         console.warn('Failed to persist FlowDay state', error);
@@ -107,21 +115,21 @@ export function FlowDayProvider({
     };
 
     persistState();
-  }, [activeTab, isDarkMode, isHydrated, selectedDate, tasks]);
+  }, [activeTab, isDarkMode, isHydrated, onboardingCompleted, profile, selectedDate, tasks]);
 
   const openCreateModal = (inInbox = false) => {
     dispatch({
       type: 'open_editor',
       payload: {
-      title: '',
-      categoryId: 'work',
-      energyLevel: 'low',
-      startHour: 9,
-      startMinute: 0,
-      durationMinutes: 60,
-      notes: '',
-      isAllDay: false,
-      inInbox,
+        title: '',
+        categoryId: 'work',
+        energyLevel: 'low',
+        startHour: profile.dayStartHour,
+        startMinute: 0,
+        durationMinutes: profile.defaultDurationMinutes,
+        notes: '',
+        isAllDay: false,
+        inInbox,
       },
     });
   };
@@ -260,10 +268,12 @@ export function FlowDayProvider({
     activeTab,
     selectedDate,
     tasks,
+    profile,
     editorVisible,
     editorState,
     isDarkMode,
     isHydrated,
+    onboardingCompleted,
     setActiveTab: (tab: TabKey) => dispatch({ type: 'set_active_tab', payload: tab }),
     setSelectedDate: (dateKey: string) =>
       dispatch({ type: 'set_selected_date', payload: dateKey }),
@@ -271,6 +281,9 @@ export function FlowDayProvider({
       dispatch({ type: 'set_dark_mode', payload: nextValue }),
     setEditorState: (nextState: EditorState | null) =>
       dispatch({ type: 'set_editor_state', payload: nextState }),
+    completeOnboarding: (nextProfile: PlannerProfile) =>
+      dispatch({ type: 'complete_onboarding', payload: nextProfile }),
+    reopenOnboarding: () => dispatch({ type: 'reopen_onboarding' }),
     openCreateModal,
     openEditModal,
     closeEditor,

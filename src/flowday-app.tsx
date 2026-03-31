@@ -14,6 +14,7 @@ import { TaskEditorModal } from './components/task-editor-modal';
 import { usePlannerData } from './hooks/use-planner-data';
 import { InboxScreen } from './screens/inbox-screen';
 import { MoreScreen } from './screens/more-screen';
+import { OnboardingScreen } from './screens/onboarding-screen';
 import { TodayScreen } from './screens/today-screen';
 import { WeekScreen } from './screens/week-screen';
 import { FlowDayProvider, useFlowDay } from './store/flowday-context';
@@ -141,11 +142,24 @@ function WeekTabScreen() {
 }
 
 function MoreTabScreen() {
-  const { isDarkMode, setIsDarkMode } = useFlowDay();
+  const {
+    isDarkMode,
+    setIsDarkMode,
+    profile,
+    onboardingCompleted,
+    reopenOnboarding,
+  } = useFlowDay();
   const theme = isDarkMode ? darkTheme : lightTheme;
 
   return (
-    <MoreScreen theme={theme} isDarkMode={isDarkMode} onToggleTheme={setIsDarkMode} />
+    <MoreScreen
+      theme={theme}
+      isDarkMode={isDarkMode}
+      profile={profile}
+      onboardingCompleted={onboardingCompleted}
+      onToggleTheme={setIsDarkMode}
+      onOpenOnboarding={reopenOnboarding}
+    />
   );
 }
 
@@ -156,8 +170,11 @@ function FlowDayShell() {
     editorState,
     isDarkMode,
     isHydrated,
+    onboardingCompleted,
+    profile,
     setActiveTab,
     setEditorState,
+    completeOnboarding,
     openCreateModal,
     closeEditor,
     saveTask,
@@ -187,6 +204,22 @@ function FlowDayShell() {
         <View style={styles.loadingState}>
           <ActivityIndicator size="large" color={theme.accent} />
         </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!onboardingCompleted) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
+        <StatusBar
+          barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+          backgroundColor={theme.background}
+        />
+        <OnboardingScreen
+          theme={theme}
+          initialProfile={profile}
+          onComplete={completeOnboarding}
+        />
       </SafeAreaView>
     );
   }
