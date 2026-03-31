@@ -764,7 +764,7 @@ const styles = StyleSheet.create({
   screenContent: {
     paddingHorizontal: 22,
     paddingTop: 18,
-    paddingBottom: 140,
+    paddingBottom: 190,
   },
   headerRow: {
     flexDirection: 'row',
@@ -899,6 +899,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingVertical: 22,
     paddingRight: 18,
+    paddingBottom: 34,
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.12,
     shadowRadius: 24,
@@ -935,8 +936,9 @@ const styles = StyleSheet.create({
     right: 0,
     borderRadius: 22,
     borderWidth: 1.5,
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     paddingVertical: 14,
+    overflow: 'hidden',
   },
   taskCardHeader: {
     flexDirection: 'row',
@@ -987,7 +989,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     alignItems: 'center',
     gap: 8,
-    marginTop: 8,
+    marginTop: 6,
   },
   taskMetaText: {
     fontSize: 12,
@@ -1021,16 +1023,16 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   taskNotes: {
-    marginTop: 10,
+    marginTop: 8,
     fontSize: 12,
-    lineHeight: 18,
+    lineHeight: 17,
     fontWeight: '500',
   },
   taskActionsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 14,
-    marginTop: 12,
+    marginTop: 10,
   },
   miniActionText: {
     fontSize: 12,

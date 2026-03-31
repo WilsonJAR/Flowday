@@ -1,11 +1,12 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Theme, TabKey } from '../types';
 
 const tabItems: Array<{ key: TabKey; label: string; icon: string }> = [
-  { key: 'today', label: 'Today', icon: '⌂' },
-  { key: 'inbox', label: 'Inbox', icon: '▱' },
-  { key: 'week', label: 'Week', icon: '☷' },
+  { key: 'today', label: 'Today', icon: '◫' },
+  { key: 'inbox', label: 'Inbox', icon: '▭' },
+  { key: 'week', label: 'Week', icon: '☰' },
   { key: 'more', label: 'More', icon: '⚙' },
 ];
 
@@ -20,14 +21,17 @@ export function BottomNavigation({
   onChangeTab: (tab: TabKey) => void;
   onOpenEditor: () => void;
 }) {
+  const insets = useSafeAreaInsets();
+
   return (
     <View
       style={[
         styles.bottomBar,
         {
           backgroundColor: theme.surface,
-          borderTopColor: theme.border,
+          borderColor: theme.border,
           shadowColor: theme.shadow,
+          bottom: Math.max(insets.bottom, 10),
         },
       ]}>
       <View style={styles.bottomTabsRow}>
@@ -81,7 +85,12 @@ function TabButton({
   onPress: () => void;
 }) {
   return (
-    <Pressable onPress={onPress} style={styles.tabButton}>
+    <Pressable
+      onPress={onPress}
+      style={[
+        styles.tabButton,
+        active ? { backgroundColor: theme.accentSoft } : null,
+      ]}>
       <Text style={[styles.tabIcon, { color: active ? theme.accent : theme.textMuted }]}>
         {item.icon}
       </Text>
@@ -95,11 +104,13 @@ function TabButton({
 const styles = StyleSheet.create({
   bottomBar: {
     position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    paddingTop: 14,
-    paddingBottom: 18,
+    left: 12,
+    right: 12,
+    paddingTop: 10,
+    paddingBottom: 10,
+    paddingHorizontal: 8,
+    borderWidth: 1,
+    borderRadius: 30,
     borderTopWidth: 1,
     shadowOffset: { width: 0, height: -6 },
     shadowOpacity: 0.08,
@@ -108,32 +119,36 @@ const styles = StyleSheet.create({
   },
   bottomTabsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   tabButton: {
-    width: 74,
+    minWidth: 66,
+    minHeight: 48,
+    borderRadius: 18,
+    paddingHorizontal: 8,
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 6,
   },
   tabIcon: {
-    fontSize: 21,
-    fontWeight: '600',
+    fontSize: 17,
+    fontWeight: '700',
   },
   tabLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
   },
   fabSpacer: {
-    width: 88,
+    width: 74,
   },
   fabButton: {
     position: 'absolute',
     alignSelf: 'center',
-    top: -28,
-    width: 58,
-    height: 58,
-    borderRadius: 29,
+    top: -18,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
     shadowOffset: { width: 0, height: 12 },
@@ -143,8 +158,8 @@ const styles = StyleSheet.create({
   },
   fabIcon: {
     color: '#FFFFFF',
-    fontSize: 30,
-    lineHeight: 32,
-    fontWeight: '300',
+    fontSize: 28,
+    lineHeight: 30,
+    fontWeight: '400',
   },
 });
