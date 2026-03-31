@@ -6,6 +6,7 @@ export const FLOWDAY_STORAGE_VERSION = 1;
 export type FlowDayPersistedState = {
   version: number;
   activeTab: TabKey;
+  selectedDate: string;
   tasks: Task[];
   isDarkMode: boolean;
 };
@@ -17,6 +18,7 @@ export type FlowDayRuntimeState = FlowDayPersistedState & {
 export const defaultPersistedState: FlowDayPersistedState = {
   version: FLOWDAY_STORAGE_VERSION,
   activeTab: 'today',
+  selectedDate: new Date().toISOString().slice(0, 10),
   tasks: [],
   isDarkMode: false,
 };

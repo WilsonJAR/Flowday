@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useEffect, useReducer } from 'react';
-import { TODAY_KEY } from '../constants/planner';
 import { EditorState, TabKey, Task } from '../types';
 import {
   loadPersistedState,
@@ -13,12 +12,14 @@ import { FLOWDAY_STORAGE_VERSION } from './app-state';
 
 type FlowDayContextValue = {
   activeTab: TabKey;
+  selectedDate: string;
   tasks: Task[];
   editorVisible: boolean;
   editorState: EditorState | null;
   isDarkMode: boolean;
   isHydrated: boolean;
   setActiveTab: (tab: TabKey) => void;
+  setSelectedDate: (dateKey: string) => void;
   setIsDarkMode: (value: boolean) => void;
   setEditorState: (state: EditorState | null) => void;
   openCreateModal: (inInbox?: boolean) => void;
@@ -47,6 +48,7 @@ export function FlowDayProvider({
   );
   const {
     activeTab,
+    selectedDate,
     tasks,
     editorVisible,
     editorState,
@@ -95,6 +97,7 @@ export function FlowDayProvider({
         await savePersistedState({
           version: FLOWDAY_STORAGE_VERSION,
           activeTab,
+          selectedDate,
           tasks,
           isDarkMode,
         });
@@ -104,7 +107,7 @@ export function FlowDayProvider({
     };
 
     persistState();
-  }, [activeTab, isDarkMode, isHydrated, tasks]);
+  }, [activeTab, isDarkMode, isHydrated, selectedDate, tasks]);
 
   const openCreateModal = (inInbox = false) => {
     dispatch({
@@ -164,7 +167,7 @@ export function FlowDayProvider({
           : editorState.durationMinutes,
       notes: editorState.notes.trim(),
       completed: false,
-      date: TODAY_KEY,
+      date: selectedDate,
       isAllDay: editorState.isAllDay,
       inInbox: editorState.inInbox,
     };
@@ -255,12 +258,15 @@ export function FlowDayProvider({
 
   const value = {
     activeTab,
+    selectedDate,
     tasks,
     editorVisible,
     editorState,
     isDarkMode,
     isHydrated,
     setActiveTab: (tab: TabKey) => dispatch({ type: 'set_active_tab', payload: tab }),
+    setSelectedDate: (dateKey: string) =>
+      dispatch({ type: 'set_selected_date', payload: dateKey }),
     setIsDarkMode: (nextValue: boolean) =>
       dispatch({ type: 'set_dark_mode', payload: nextValue }),
     setEditorState: (nextState: EditorState | null) =>

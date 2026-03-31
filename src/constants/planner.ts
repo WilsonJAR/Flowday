@@ -1,6 +1,5 @@
 import { CategoryDefinition } from '../types';
 
-export const TODAY_KEY = '2026-03-30';
 export const HOUR_HEIGHT = 92;
 export const TIMELINE_START_HOUR = 6;
 export const TIMELINE_END_HOUR = 14;

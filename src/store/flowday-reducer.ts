@@ -1,5 +1,6 @@
 import { initialTasks } from '../data/mock-data';
 import { EditorState, TabKey, Task } from '../types';
+import { getTodayDateKey } from '../utils/dates';
 import {
   defaultPersistedState,
   FLOWDAY_STORAGE_VERSION,
@@ -20,6 +21,7 @@ export type FlowDayAction =
   | { type: 'hydrate'; payload: HydratePayload }
   | { type: 'set_hydrated' }
   | { type: 'set_active_tab'; payload: TabKey }
+  | { type: 'set_selected_date'; payload: string }
   | { type: 'set_dark_mode'; payload: boolean }
   | { type: 'set_editor_state'; payload: EditorState | null }
   | { type: 'open_editor'; payload: EditorState }
@@ -30,6 +32,7 @@ export function createInitialFlowDayState(initialDarkMode: boolean): FlowDayStat
   return {
     ...defaultPersistedState,
     version: FLOWDAY_STORAGE_VERSION,
+    selectedDate: getTodayDateKey(),
     tasks: initialTasks,
     isDarkMode: initialDarkMode,
     isHydrated: false,
@@ -55,6 +58,11 @@ export function flowDayReducer(state: FlowDayState, action: FlowDayAction): Flow
       return {
         ...state,
         activeTab: action.payload,
+      };
+    case 'set_selected_date':
+      return {
+        ...state,
+        selectedDate: action.payload,
       };
     case 'set_dark_mode':
       return {

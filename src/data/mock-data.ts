@@ -1,5 +1,10 @@
 import { Task } from '../types';
-import { TODAY_KEY } from '../constants/planner';
+import { getTodayDateKey, shiftDateKey } from '../utils/dates';
+
+const todayKey = getTodayDateKey();
+const tomorrowKey = shiftDateKey(todayKey, 1);
+const yesterdayKey = shiftDateKey(todayKey, -1);
+const plusThreeDaysKey = shiftDateKey(todayKey, 3);
 
 export const initialTasks: Task[] = [
   {
@@ -10,7 +15,7 @@ export const initialTasks: Task[] = [
     startHour: 7,
     startMinute: 0,
     durationMinutes: 15,
-    date: TODAY_KEY,
+    date: todayKey,
     completed: true,
   },
   {
@@ -21,7 +26,7 @@ export const initialTasks: Task[] = [
     startHour: 9,
     startMinute: 0,
     durationMinutes: 60,
-    date: TODAY_KEY,
+    date: todayKey,
     completed: true,
   },
   {
@@ -33,7 +38,7 @@ export const initialTasks: Task[] = [
     startMinute: 0,
     durationMinutes: 120,
     notes: 'Propuesta del cliente y revisión final',
-    date: TODAY_KEY,
+    date: todayKey,
     completed: false,
   },
   {
@@ -44,7 +49,7 @@ export const initialTasks: Task[] = [
     startHour: 13,
     startMinute: 0,
     durationMinutes: 60,
-    date: TODAY_KEY,
+    date: todayKey,
     completed: false,
   },
   {
@@ -55,7 +60,7 @@ export const initialTasks: Task[] = [
     startHour: 15,
     startMinute: 30,
     durationMinutes: 30,
-    date: TODAY_KEY,
+    date: todayKey,
     completed: false,
   },
   {
@@ -66,7 +71,7 @@ export const initialTasks: Task[] = [
     startHour: 18,
     startMinute: 0,
     durationMinutes: 60,
-    date: TODAY_KEY,
+    date: todayKey,
     completed: false,
   },
   {
@@ -77,7 +82,7 @@ export const initialTasks: Task[] = [
     startHour: 21,
     startMinute: 0,
     durationMinutes: 30,
-    date: TODAY_KEY,
+    date: todayKey,
     completed: false,
   },
   {
@@ -85,7 +90,7 @@ export const initialTasks: Task[] = [
     title: 'Comprar ingredientes para la cena',
     categoryId: 'personal',
     energyLevel: 'low',
-    date: TODAY_KEY,
+    date: todayKey,
     completed: false,
     inInbox: true,
   },
@@ -94,8 +99,41 @@ export const initialTasks: Task[] = [
     title: 'Revisar capítulo 3 del libro',
     categoryId: 'study',
     energyLevel: 'medium',
-    date: TODAY_KEY,
+    date: todayKey,
     completed: false,
     inInbox: true,
+  },
+  {
+    id: '10',
+    title: 'Clase de inglés',
+    categoryId: 'study',
+    energyLevel: 'medium',
+    startHour: 19,
+    startMinute: 0,
+    durationMinutes: 60,
+    date: tomorrowKey,
+    completed: false,
+  },
+  {
+    id: '11',
+    title: 'Revisión semanal',
+    categoryId: 'routine',
+    energyLevel: 'low',
+    startHour: 8,
+    startMinute: 30,
+    durationMinutes: 45,
+    date: plusThreeDaysKey,
+    completed: false,
+  },
+  {
+    id: '12',
+    title: 'Entrega pendiente',
+    categoryId: 'work',
+    energyLevel: 'high',
+    startHour: 11,
+    startMinute: 0,
+    durationMinutes: 90,
+    date: yesterdayKey,
+    completed: false,
   },
 ];

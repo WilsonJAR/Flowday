@@ -9,6 +9,7 @@ import { TabKey, Task } from '../../types';
 
 type LegacyState = {
   activeTab?: TabKey;
+  selectedDate?: string;
   tasks?: Task[];
   isDarkMode?: boolean;
 };
@@ -19,6 +20,7 @@ function normalizePersistedState(
   return {
     version: FLOWDAY_STORAGE_VERSION,
     activeTab: rawState.activeTab ?? defaultPersistedState.activeTab,
+    selectedDate: rawState.selectedDate ?? defaultPersistedState.selectedDate,
     tasks: Array.isArray(rawState.tasks) ? rawState.tasks : defaultPersistedState.tasks,
     isDarkMode:
       typeof rawState.isDarkMode === 'boolean'

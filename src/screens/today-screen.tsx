@@ -7,15 +7,21 @@ import {
 } from '../constants/planner';
 import { Theme, Task } from '../types';
 import {
+  formatDayNumber,
+  formatSpanishDate,
+  formatWeekdayShort,
+  shiftDateKey,
+} from '../utils/dates';
+import {
   energyLabel,
   formatMinutes,
-  formatSpanishDate,
   formatTaskTime,
   getCategory,
 } from '../utils/planner';
 
 export function TodayScreen({
   theme,
+  selectedDate,
   tasks,
   completionRate,
   plannedMinutes,
@@ -25,8 +31,10 @@ export function TodayScreen({
   onToggleComplete,
   onDuplicateTask,
   onMoveToInbox,
+  onSelectDate,
 }: {
   theme: Theme;
+  selectedDate: string;
   tasks: Task[];
   completionRate: number;
   plannedMinutes: number;
@@ -36,6 +44,7 @@ export function TodayScreen({
   onToggleComplete: (taskId: string) => void;
   onDuplicateTask: (taskId: string) => void;
   onMoveToInbox: (taskId: string) => void;
+  onSelectDate: (dateKey: string) => void;
 }) {
   const visibleHours = Array.from(
     { length: TIMELINE_END_HOUR - TIMELINE_START_HOUR + 1 },
@@ -57,7 +66,7 @@ export function TodayScreen({
         <View>
           <Text style={[styles.pageTitle, { color: theme.text }]}>Today</Text>
           <Text style={[styles.pageSubtitle, { color: theme.textMuted }]}>
-            {formatSpanishDate('2026-03-30')}
+            {formatSpanishDate(selectedDate)}
           </Text>
         </View>
         <View style={styles.headerMetric}>
@@ -68,6 +77,36 @@ export function TodayScreen({
             completado
           </Text>
         </View>
+      </View>
+
+      <View style={styles.datePager}>
+        <MiniDateButton
+          theme={theme}
+          label="‹"
+          helper={formatDayNumber(shiftDateKey(selectedDate, -1))}
+          onPress={() => onSelectDate(shiftDateKey(selectedDate, -1))}
+        />
+        <View
+          style={[
+            styles.dateFocusCard,
+            {
+              backgroundColor: theme.surface,
+              borderColor: theme.border,
+            },
+          ]}>
+          <Text style={[styles.dateFocusWeekday, { color: theme.textMuted }]}>
+            {formatWeekdayShort(selectedDate)}
+          </Text>
+          <Text style={[styles.dateFocusValue, { color: theme.text }]}>
+            {formatDayNumber(selectedDate)}
+          </Text>
+        </View>
+        <MiniDateButton
+          theme={theme}
+          label="›"
+          helper={formatDayNumber(shiftDateKey(selectedDate, 1))}
+          onPress={() => onSelectDate(shiftDateKey(selectedDate, 1))}
+        />
       </View>
 
       <View
@@ -236,6 +275,30 @@ export function TodayScreen({
   );
 }
 
+function MiniDateButton({
+  theme,
+  label,
+  helper,
+  onPress,
+}: {
+  theme: Theme;
+  label: string;
+  helper: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={[
+        styles.dateArrowButton,
+        { backgroundColor: theme.surfaceMuted, borderColor: theme.border },
+      ]}>
+      <Text style={[styles.dateArrowLabel, { color: theme.text }]}>{label}</Text>
+      <Text style={[styles.dateArrowHelper, { color: theme.textMuted }]}>{helper}</Text>
+    </Pressable>
+  );
+}
+
 function SummaryMetric({
   theme,
   icon,
@@ -324,6 +387,47 @@ const styles = StyleSheet.create({
     marginTop: 2,
     fontSize: 12,
     fontWeight: '500',
+  },
+  datePager: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 18,
+  },
+  dateArrowButton: {
+    width: 66,
+    minHeight: 64,
+    borderRadius: 18,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dateArrowLabel: {
+    fontSize: 22,
+    fontWeight: '700',
+  },
+  dateArrowHelper: {
+    marginTop: 2,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  dateFocusCard: {
+    flex: 1,
+    minHeight: 64,
+    borderRadius: 18,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dateFocusWeekday: {
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+  },
+  dateFocusValue: {
+    marginTop: 2,
+    fontSize: 22,
+    fontWeight: '700',
   },
   summaryCard: {
     flexDirection: 'row',

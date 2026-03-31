@@ -85,13 +85,15 @@ function AppTabBar({
 function TodayTabScreen() {
   const { openEditModal, toggleTaskComplete, duplicateTask, moveTaskToInbox, isDarkMode } =
     useFlowDay();
-  const { todayTasks, completionRate, plannedMinutes, loadLabel, nextTask } =
+  const { todayTasks, selectedDate, completionRate, plannedMinutes, loadLabel, nextTask } =
     usePlannerData();
+  const { setSelectedDate } = useFlowDay();
   const theme = isDarkMode ? darkTheme : lightTheme;
 
   return (
     <TodayScreen
       theme={theme}
+      selectedDate={selectedDate}
       tasks={todayTasks}
       completionRate={completionRate}
       plannedMinutes={plannedMinutes}
@@ -101,6 +103,7 @@ function TodayTabScreen() {
       onToggleComplete={toggleTaskComplete}
       onDuplicateTask={duplicateTask}
       onMoveToInbox={moveTaskToInbox}
+      onSelectDate={setSelectedDate}
     />
   );
 }
@@ -122,11 +125,19 @@ function InboxTabScreen() {
 }
 
 function WeekTabScreen() {
-  const { isDarkMode } = useFlowDay();
-  const { todayTasks } = usePlannerData();
+  const { isDarkMode, setSelectedDate } = useFlowDay();
+  const { selectedDate, weekOverview, monthOverview } = usePlannerData();
   const theme = isDarkMode ? darkTheme : lightTheme;
 
-  return <WeekScreen theme={theme} tasks={todayTasks} />;
+  return (
+    <WeekScreen
+      theme={theme}
+      selectedDate={selectedDate}
+      weekOverview={weekOverview}
+      monthOverview={monthOverview}
+      onSelectDate={setSelectedDate}
+    />
+  );
 }
 
 function MoreTabScreen() {
