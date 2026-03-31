@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
   screenContent: {
     paddingHorizontal: 22,
     paddingTop: 18,
-    paddingBottom: 140,
+    paddingBottom: 190,
   },
   pageHeadingBlock: {
     marginBottom: 22,

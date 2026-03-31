@@ -29,9 +29,9 @@ export function BottomNavigation({
         styles.bottomBar,
         {
           backgroundColor: theme.surface,
-          borderColor: theme.border,
+          borderTopColor: theme.border,
           shadowColor: theme.shadow,
-          bottom: Math.max(insets.bottom, 10),
+          paddingBottom: Math.max(insets.bottom, 14),
         },
       ]}>
       <View style={styles.bottomTabsRow}>
@@ -104,13 +104,11 @@ function TabButton({
 const styles = StyleSheet.create({
   bottomBar: {
     position: 'absolute',
-    left: 12,
-    right: 12,
+    left: 0,
+    right: 0,
+    bottom: 0,
     paddingTop: 10,
-    paddingBottom: 10,
-    paddingHorizontal: 8,
-    borderWidth: 1,
-    borderRadius: 30,
+    paddingHorizontal: 10,
     borderTopWidth: 1,
     shadowOffset: { width: 0, height: -6 },
     shadowOpacity: 0.08,
@@ -119,14 +117,14 @@ const styles = StyleSheet.create({
   },
   bottomTabsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-around',
     alignItems: 'center',
   },
   tabButton: {
-    minWidth: 66,
+    flex: 1,
     minHeight: 48,
     borderRadius: 18,
-    paddingHorizontal: 8,
+    paddingHorizontal: 4,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
@@ -140,12 +138,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   fabSpacer: {
-    width: 74,
+    width: 82,
   },
   fabButton: {
     position: 'absolute',
     alignSelf: 'center',
-    top: -18,
+    top: -22,
     width: 56,
     height: 56,
     borderRadius: 28,

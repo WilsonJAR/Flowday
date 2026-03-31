@@ -342,15 +342,15 @@ function DraggableTaskCard({
   const category = getCategory(task.categoryId);
   const taskTop =
     ((task.startHour! - TIMELINE_START_HOUR) * 60 + task.startMinute!) * (HOUR_HEIGHT / 60);
-  const taskHeight = Math.max(task.durationMinutes! * (HOUR_HEIGHT / 60), 62);
+  const taskHeight = Math.max(task.durationMinutes! * (HOUR_HEIGHT / 60), 88);
   const dragY = useRef(new Animated.Value(0)).current;
   const completedSubtasks = task.subtasks.filter(subtask => subtask.completed).length;
   const hasSubtasks = task.subtasks.length > 0;
-  const showCompactMeta = taskHeight < 92;
+  const showCompactMeta = taskHeight < 98;
   const showCategory = taskHeight >= 74;
-  const showSubtasks = hasSubtasks && taskHeight >= 106;
-  const showNotes = !task.completed && !!task.notes && taskHeight >= 132;
-  const showActions = taskHeight >= 138;
+  const showSubtasks = hasSubtasks && taskHeight >= 112;
+  const showNotes = !task.completed && !!task.notes && taskHeight >= 154;
+  const showActions = taskHeight >= 168;
   const taskCheckFillStyle = task.completed
     ? { backgroundColor: category.color }
     : styles.transparentBackground;
@@ -415,7 +415,7 @@ function DraggableTaskCard({
         />
         <Pressable style={styles.taskHeaderTextWrap} onPress={() => onEditTask(task)}>
           <Text
-            numberOfLines={2}
+            numberOfLines={showCompactMeta ? 1 : 2}
             style={[
               styles.taskTitle,
               { color: theme.text },
@@ -923,7 +923,7 @@ const styles = StyleSheet.create({
   timelineEventsColumn: {
     flex: 1,
     position: 'relative',
-    minHeight: (TIMELINE_END_HOUR - TIMELINE_START_HOUR + 1) * HOUR_HEIGHT,
+    minHeight: (TIMELINE_END_HOUR - TIMELINE_START_HOUR + 1) * HOUR_HEIGHT + 56,
     borderLeftWidth: 1,
     paddingLeft: 18,
   },
@@ -956,9 +956,9 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   taskTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
-    lineHeight: 22,
+    lineHeight: 21,
   },
   activeTaskTitle: {
     textDecorationLine: 'none',
