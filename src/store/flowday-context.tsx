@@ -1,10 +1,15 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { EditorState, TabKey, Task } from '../types';
-import { initialTasks } from '../data/mock-data';
+import React, { createContext, useContext, useEffect, useReducer } from 'react';
 import { TODAY_KEY } from '../constants/planner';
-
-const STORAGE_KEY = '@flowday/app-state';
+import { EditorState, TabKey, Task } from '../types';
+import {
+  loadPersistedState,
+  savePersistedState,
+} from '../services/storage/flowday-storage';
+import {
+  createInitialFlowDayState,
+  flowDayReducer,
+} from './flowday-reducer';
+import { FLOWDAY_STORAGE_VERSION } from './app-state';
 
 type FlowDayContextValue = {
   activeTab: TabKey;
@@ -35,47 +40,40 @@ export function FlowDayProvider({
   children: React.ReactNode;
   initialDarkMode: boolean;
 }) {
-  const [activeTab, setActiveTab] = useState<TabKey>('today');
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
-  const [editorVisible, setEditorVisible] = useState(false);
-  const [editorState, setEditorState] = useState<EditorState | null>(null);
-  const [isDarkMode, setIsDarkMode] = useState(initialDarkMode);
-  const [isHydrated, setIsHydrated] = useState(false);
+  const [state, dispatch] = useReducer(
+    flowDayReducer,
+    initialDarkMode,
+    createInitialFlowDayState,
+  );
+  const {
+    activeTab,
+    tasks,
+    editorVisible,
+    editorState,
+    isDarkMode,
+    isHydrated,
+  } = state;
 
   useEffect(() => {
     let mounted = true;
 
     const hydrateState = async () => {
       try {
-        const storedValue = await AsyncStorage.getItem(STORAGE_KEY);
-        if (!storedValue) {
+        const parsed = await loadPersistedState();
+        if (!parsed) {
           return;
         }
-
-        const parsed = JSON.parse(storedValue) as Partial<{
-          activeTab: TabKey;
-          tasks: Task[];
-          isDarkMode: boolean;
-        }>;
 
         if (!mounted) {
           return;
         }
 
-        if (parsed.activeTab) {
-          setActiveTab(parsed.activeTab);
-        }
-        if (Array.isArray(parsed.tasks)) {
-          setTasks(parsed.tasks);
-        }
-        if (typeof parsed.isDarkMode === 'boolean') {
-          setIsDarkMode(parsed.isDarkMode);
-        }
+        dispatch({ type: 'hydrate', payload: parsed });
       } catch (error) {
         console.warn('Failed to hydrate FlowDay state', error);
       } finally {
         if (mounted) {
-          setIsHydrated(true);
+          dispatch({ type: 'set_hydrated' });
         }
       }
     };
@@ -94,14 +92,12 @@ export function FlowDayProvider({
 
     const persistState = async () => {
       try {
-        await AsyncStorage.setItem(
-          STORAGE_KEY,
-          JSON.stringify({
-            activeTab,
-            tasks,
-            isDarkMode,
-          }),
-        );
+        await savePersistedState({
+          version: FLOWDAY_STORAGE_VERSION,
+          activeTab,
+          tasks,
+          isDarkMode,
+        });
       } catch (error) {
         console.warn('Failed to persist FlowDay state', error);
       }
@@ -111,7 +107,9 @@ export function FlowDayProvider({
   }, [activeTab, isDarkMode, isHydrated, tasks]);
 
   const openCreateModal = (inInbox = false) => {
-    setEditorState({
+    dispatch({
+      type: 'open_editor',
+      payload: {
       title: '',
       categoryId: 'work',
       energyLevel: 'low',
@@ -121,29 +119,30 @@ export function FlowDayProvider({
       notes: '',
       isAllDay: false,
       inInbox,
+      },
     });
-    setEditorVisible(true);
   };
 
   const openEditModal = (task: Task) => {
-    setEditorState({
-      id: task.id,
-      title: task.title,
-      categoryId: task.categoryId,
-      energyLevel: task.energyLevel,
-      startHour: task.startHour ?? 9,
-      startMinute: task.startMinute ?? 0,
-      durationMinutes: task.durationMinutes ?? 60,
-      notes: task.notes ?? '',
-      isAllDay: !!task.isAllDay,
-      inInbox: !!task.inInbox,
+    dispatch({
+      type: 'open_editor',
+      payload: {
+        id: task.id,
+        title: task.title,
+        categoryId: task.categoryId,
+        energyLevel: task.energyLevel,
+        startHour: task.startHour ?? 9,
+        startMinute: task.startMinute ?? 0,
+        durationMinutes: task.durationMinutes ?? 60,
+        notes: task.notes ?? '',
+        isAllDay: !!task.isAllDay,
+        inInbox: !!task.inInbox,
+      },
     });
-    setEditorVisible(true);
   };
 
   const closeEditor = () => {
-    setEditorVisible(false);
-    setEditorState(null);
+    dispatch({ type: 'close_editor' });
   };
 
   const saveTask = () => {
@@ -170,36 +169,37 @@ export function FlowDayProvider({
       inInbox: editorState.inInbox,
     };
 
-    setTasks(currentTasks => {
-      const existingIndex = currentTasks.findIndex(task => task.id === nextTaskRecord.id);
-      if (existingIndex >= 0) {
-        const existingTask = currentTasks[existingIndex];
-        const updatedTask = {
-          ...existingTask,
-          ...nextTaskRecord,
-          completed: existingTask.completed,
-        };
-        const nextTasks = [...currentTasks];
-        nextTasks[existingIndex] = updatedTask;
-        return nextTasks;
-      }
-      return [...currentTasks, nextTaskRecord];
-    });
+    const existingIndex = tasks.findIndex(task => task.id === nextTaskRecord.id);
+    if (existingIndex >= 0) {
+      const existingTask = tasks[existingIndex];
+      const updatedTask = {
+        ...existingTask,
+        ...nextTaskRecord,
+        completed: existingTask.completed,
+      };
+      const nextTasks = [...tasks];
+      nextTasks[existingIndex] = updatedTask;
+      dispatch({ type: 'set_tasks', payload: nextTasks });
+    } else {
+      dispatch({ type: 'set_tasks', payload: [...tasks, nextTaskRecord] });
+    }
 
     closeEditor();
   };
 
   const toggleTaskComplete = (taskId: string) => {
-    setTasks(currentTasks =>
-      currentTasks.map(task =>
+    dispatch({
+      type: 'set_tasks',
+      payload: tasks.map(task =>
         task.id === taskId ? { ...task, completed: !task.completed } : task,
       ),
-    );
+    });
   };
 
   const moveTaskToInbox = (taskId: string) => {
-    setTasks(currentTasks =>
-      currentTasks.map(task =>
+    dispatch({
+      type: 'set_tasks',
+      payload: tasks.map(task =>
         task.id === taskId
           ? {
               ...task,
@@ -211,32 +211,34 @@ export function FlowDayProvider({
             }
           : task,
       ),
-    );
-    setActiveTab('inbox');
+    });
+    dispatch({ type: 'set_active_tab', payload: 'inbox' });
   };
 
   const duplicateTask = (taskId: string) => {
-    setTasks(currentTasks => {
-      const target = currentTasks.find(task => task.id === taskId);
-      if (!target) {
-        return currentTasks;
-      }
+    const target = tasks.find(task => task.id === taskId);
+    if (!target) {
+      return;
+    }
 
-      return [
-        ...currentTasks,
+    dispatch({
+      type: 'set_tasks',
+      payload: [
+        ...tasks,
         {
           ...target,
           id: `${taskId}-${Date.now()}`,
           title: `${target.title} copia`,
           completed: false,
         },
-      ];
+      ],
     });
   };
 
   const scheduleInboxTask = (task: Task) => {
-    setTasks(currentTasks =>
-      currentTasks.map(currentTask =>
+    dispatch({
+      type: 'set_tasks',
+      payload: tasks.map(currentTask =>
         currentTask.id === task.id
           ? {
               ...currentTask,
@@ -247,8 +249,8 @@ export function FlowDayProvider({
             }
           : currentTask,
       ),
-    );
-    setActiveTab('today');
+    });
+    dispatch({ type: 'set_active_tab', payload: 'today' });
   };
 
   const value = {
@@ -258,9 +260,11 @@ export function FlowDayProvider({
     editorState,
     isDarkMode,
     isHydrated,
-    setActiveTab,
-    setIsDarkMode,
-    setEditorState,
+    setActiveTab: (tab: TabKey) => dispatch({ type: 'set_active_tab', payload: tab }),
+    setIsDarkMode: (nextValue: boolean) =>
+      dispatch({ type: 'set_dark_mode', payload: nextValue }),
+    setEditorState: (nextState: EditorState | null) =>
+      dispatch({ type: 'set_editor_state', payload: nextState }),
     openCreateModal,
     openEditModal,
     closeEditor,
