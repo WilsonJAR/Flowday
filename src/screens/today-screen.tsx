@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import {
   HOUR_HEIGHT,
@@ -81,6 +82,8 @@ export function TodayScreen({
   ) => void;
   onStartFocus: (task: Task) => void;
 }) {
+  const { width } = useWindowDimensions();
+  const isCompactScreen = width < 420;
   const [replanTask, setReplanTask] = useState<Task | null>(null);
   const visibleHours = Array.from(
     { length: TIMELINE_END_HOUR - TIMELINE_START_HOUR + 1 },
@@ -164,6 +167,7 @@ export function TodayScreen({
         <View
           style={[
             styles.summaryCard,
+            isCompactScreen ? styles.summaryCardCompact : null,
             {
               backgroundColor: theme.surface,
               borderColor: theme.border,
@@ -175,20 +179,30 @@ export function TodayScreen({
             icon="☑"
             label="Tareas"
             value={`${tasks.filter(task => task.completed).length}/${tasks.length}`}
+            compact={isCompactScreen}
           />
           <SummaryMetric
             theme={theme}
             icon="◔"
             label="Planificado"
             value={formatMinutes(plannedMinutes)}
+            compact={isCompactScreen}
           />
-          <SummaryMetric theme={theme} icon="⌁" label="Carga" value={loadLabel} pill />
+          <SummaryMetric
+            theme={theme}
+            icon="⌁"
+            label="Carga"
+            value={loadLabel}
+            pill
+            compact={isCompactScreen}
+          />
           <SummaryMetric
             theme={theme}
             icon="⚡"
             label="Próxima"
             value={nextTask ? nextTask.title : 'Todo listo'}
             helper={nextTask ? formatTaskTime(nextTask) : 'Sin pendientes'}
+            compact={isCompactScreen}
           />
         </View>
 
@@ -332,6 +346,11 @@ function DraggableTaskCard({
   const dragY = useRef(new Animated.Value(0)).current;
   const completedSubtasks = task.subtasks.filter(subtask => subtask.completed).length;
   const hasSubtasks = task.subtasks.length > 0;
+  const showCompactMeta = taskHeight < 92;
+  const showCategory = taskHeight >= 74;
+  const showSubtasks = hasSubtasks && taskHeight >= 106;
+  const showNotes = !task.completed && !!task.notes && taskHeight >= 132;
+  const showActions = taskHeight >= 138;
   const taskCheckFillStyle = task.completed
     ? { backgroundColor: category.color }
     : styles.transparentBackground;
@@ -396,6 +415,7 @@ function DraggableTaskCard({
         />
         <Pressable style={styles.taskHeaderTextWrap} onPress={() => onEditTask(task)}>
           <Text
+            numberOfLines={2}
             style={[
               styles.taskTitle,
               { color: theme.text },
@@ -406,7 +426,11 @@ function DraggableTaskCard({
         </Pressable>
         <View
           {...panResponder.panHandlers}
-          style={[styles.dragHandle, { backgroundColor: theme.background }]}>
+          style={[
+            styles.dragHandle,
+            styles.taskDragAnchor,
+            { backgroundColor: theme.background },
+          ]}>
           <Text style={[styles.dragHandleText, { color: theme.textMuted }]}>⋮⋮</Text>
         </View>
       </View>
@@ -415,9 +439,11 @@ function DraggableTaskCard({
         <Text style={[styles.taskMetaText, { color: theme.textMuted }]}>
           {formatTaskTime(task)}
         </Text>
-        <Text style={[styles.taskMetaText, { color: theme.textMuted }]}>
-          {energyLabel(task.energyLevel)}
-        </Text>
+        {!showCompactMeta ? (
+          <Text style={[styles.taskMetaText, { color: theme.textMuted }]}>
+            {energyLabel(task.energyLevel)}
+          </Text>
+        ) : null}
         <View
           style={[
             styles.priorityPill,
@@ -425,19 +451,21 @@ function DraggableTaskCard({
           ]}>
           <Text style={styles.priorityPillText}>{priorityLabel(task.priority)}</Text>
         </View>
-        <View
-          style={[
-            styles.categoryPill,
-            styles.transparentBorder,
-            { backgroundColor: theme.background },
-          ]}>
-          <Text style={[styles.categoryPillText, { color: category.color }]}>
-            {category.label}
-          </Text>
-        </View>
+        {showCategory ? (
+          <View
+            style={[
+              styles.categoryPill,
+              styles.transparentBorder,
+              { backgroundColor: theme.background },
+            ]}>
+            <Text style={[styles.categoryPillText, { color: category.color }]}>
+              {category.label}
+            </Text>
+          </View>
+        ) : null}
       </View>
 
-      {hasSubtasks ? (
+      {showSubtasks ? (
         <View style={styles.subtaskProgressRow}>
           <Text style={[styles.subtaskProgressText, { color: theme.textSoft }]}>
             {completedSubtasks}/{task.subtasks.length} subtareas
@@ -445,31 +473,33 @@ function DraggableTaskCard({
         </View>
       ) : null}
 
-      {!task.completed && taskHeight > 90 && task.notes ? (
+      {showNotes ? (
         <Text numberOfLines={2} style={[styles.taskNotes, { color: theme.textSoft }]}>
           {task.notes}
         </Text>
       ) : null}
 
-      <View style={styles.taskActionsRow}>
-        <MiniAction
-          label="Duplicar"
-          color={theme.textMuted}
-          onPress={() => onDuplicateTask(task.id)}
-        />
-        <MiniAction
-          label="Replan"
-          color={theme.accent}
-          onPress={() => onOpenReplan(task)}
-        />
-        {!task.completed ? (
+      {showActions ? (
+        <View style={styles.taskActionsRow}>
           <MiniAction
-            label="Focus"
-            color={category.color}
-            onPress={() => onStartFocus(task)}
+            label="Duplicar"
+            color={theme.textMuted}
+            onPress={() => onDuplicateTask(task.id)}
           />
-        ) : null}
-      </View>
+          <MiniAction
+            label="Replan"
+            color={theme.accent}
+            onPress={() => onOpenReplan(task)}
+          />
+          {!task.completed ? (
+            <MiniAction
+              label="Focus"
+              color={category.color}
+              onPress={() => onStartFocus(task)}
+            />
+          ) : null}
+        </View>
+      ) : null}
     </Animated.View>
   );
 }
@@ -609,6 +639,7 @@ function SummaryMetric({
   value,
   helper,
   pill,
+  compact,
 }: {
   theme: Theme;
   icon: string;
@@ -616,9 +647,10 @@ function SummaryMetric({
   value: string;
   helper?: string;
   pill?: boolean;
+  compact?: boolean;
 }) {
   return (
-    <View style={styles.summaryMetric}>
+    <View style={[styles.summaryMetric, compact ? styles.summaryMetricCompact : null]}>
       <Text style={[styles.summaryLabel, { color: theme.textMuted }]}>
         {icon} {label}
       </Text>
@@ -627,12 +659,18 @@ function SummaryMetric({
           pill ? styles.loadPill : null,
           pill ? { backgroundColor: theme.accentSoft } : null,
         ]}>
-        <Text style={[styles.summaryValue, { color: pill ? theme.accent : theme.text }]}>
+        <Text
+          numberOfLines={compact ? 2 : 3}
+          style={[styles.summaryValue, { color: pill ? theme.accent : theme.text }]}>
           {value}
         </Text>
       </View>
       {helper ? (
-        <Text style={[styles.summaryHelper, { color: theme.textMuted }]}>{helper}</Text>
+        <Text
+          numberOfLines={2}
+          style={[styles.summaryHelper, { color: theme.textMuted }]}>
+          {helper}
+        </Text>
       ) : null}
     </View>
   );
@@ -810,9 +848,16 @@ const styles = StyleSheet.create({
     elevation: 4,
     marginBottom: 18,
   },
+  summaryCardCompact: {
+    flexWrap: 'wrap',
+    gap: 14,
+  },
   summaryMetric: {
     flex: 1,
     gap: 8,
+  },
+  summaryMetricCompact: {
+    minWidth: '46%',
   },
   summaryLabel: {
     fontSize: 13,
@@ -896,6 +941,7 @@ const styles = StyleSheet.create({
   taskCardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingRight: 42,
   },
   taskHeaderTextWrap: {
     flex: 1,
@@ -910,6 +956,7 @@ const styles = StyleSheet.create({
   taskTitle: {
     fontSize: 16,
     fontWeight: '700',
+    lineHeight: 22,
   },
   activeTaskTitle: {
     textDecorationLine: 'none',
@@ -925,6 +972,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginLeft: 10,
   },
+  taskDragAnchor: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+  },
   dragHandleText: {
     fontSize: 14,
     fontWeight: '800',
@@ -935,7 +987,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     alignItems: 'center',
     gap: 8,
-    marginTop: 10,
+    marginTop: 8,
   },
   taskMetaText: {
     fontSize: 12,
@@ -976,6 +1028,7 @@ const styles = StyleSheet.create({
   },
   taskActionsRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 14,
     marginTop: 12,
   },

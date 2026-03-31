@@ -58,7 +58,9 @@ export function TaskEditorModal({
             </Pressable>
           </View>
 
-          <ScrollView showsVerticalScrollIndicator={false}>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}>
             <TextInput
               placeholder="¿Qué vas a hacer?"
               placeholderTextColor={theme.textMuted}
@@ -458,6 +460,10 @@ const styles = StyleSheet.create({
     paddingTop: 18,
     maxHeight: '88%',
   },
+  scrollContent: {
+    paddingHorizontal: 22,
+    paddingBottom: 28,
+  },
   modalHeader: {
     paddingHorizontal: 22,
     paddingBottom: 10,
@@ -474,7 +480,6 @@ const styles = StyleSheet.create({
     lineHeight: 28,
   },
   titleInput: {
-    marginHorizontal: 22,
     paddingVertical: 14,
     borderBottomWidth: 1,
     fontSize: 16,
@@ -523,8 +528,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   timeRow: {
-    flexDirection: 'row',
-    gap: 14,
+    gap: 12,
     marginBottom: 18,
   },
   fieldColumn: {
@@ -561,6 +565,7 @@ const styles = StyleSheet.create({
   },
   energyRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 10,
     marginBottom: 18,
   },
@@ -571,7 +576,7 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   energyChip: {
-    flex: 1,
+    minWidth: '30%',
     minHeight: 46,
     borderRadius: 18,
     alignItems: 'center',
@@ -582,7 +587,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   priorityChip: {
-    minWidth: 92,
+    minWidth: '30%',
     minHeight: 42,
     borderRadius: 16,
     alignItems: 'center',
