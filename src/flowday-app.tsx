@@ -90,6 +90,8 @@ function TodayTabScreen() {
     toggleTaskComplete,
     duplicateTask,
     moveTaskToInbox,
+    moveTaskToTomorrow,
+    rescheduleTask,
     startFocusSession,
     isDarkMode,
   } = useFlowDay();
@@ -111,7 +113,9 @@ function TodayTabScreen() {
       onToggleComplete={toggleTaskComplete}
       onDuplicateTask={duplicateTask}
       onMoveToInbox={moveTaskToInbox}
+      onMoveToTomorrow={moveTaskToTomorrow}
       onSelectDate={setSelectedDate}
+      onRescheduleTask={rescheduleTask}
       onStartFocus={startFocusSession}
     />
   );

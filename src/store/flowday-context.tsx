@@ -6,6 +6,7 @@ import {
   TabKey,
   Task,
 } from '../types';
+import { shiftDateKey } from '../utils/dates';
 import {
   loadPersistedState,
   savePersistedState,
@@ -51,6 +52,17 @@ type FlowDayContextValue = {
   moveTaskToInbox: (taskId: string) => void;
   duplicateTask: (taskId: string) => void;
   scheduleInboxTask: (task: Task) => void;
+  rescheduleTask: (
+    taskId: string,
+    updates: {
+      date?: string;
+      startHour?: number;
+      startMinute?: number;
+      durationMinutes?: number;
+      inInbox?: boolean;
+    },
+  ) => void;
+  moveTaskToTomorrow: (taskId: string) => void;
 };
 
 const FlowDayContext = createContext<FlowDayContextValue | undefined>(undefined);
@@ -332,6 +344,65 @@ export function FlowDayProvider({
     dispatch({ type: 'set_active_tab', payload: 'today' });
   };
 
+  const rescheduleTask = (
+    taskId: string,
+    updates: {
+      date?: string;
+      startHour?: number;
+      startMinute?: number;
+      durationMinutes?: number;
+      inInbox?: boolean;
+    },
+  ) => {
+    dispatch({
+      type: 'set_tasks',
+      payload: tasks.map(task =>
+        task.id === taskId
+          ? (() => {
+              const nextInInbox = updates.inInbox ?? task.inInbox ?? false;
+              const nextIsAllDay = nextInInbox ? false : task.isAllDay;
+
+              return {
+                ...task,
+                date: updates.date ?? task.date,
+                startHour:
+                  nextInInbox || nextIsAllDay
+                    ? undefined
+                    : updates.startHour ?? task.startHour,
+                startMinute:
+                  nextInInbox || nextIsAllDay
+                    ? undefined
+                    : updates.startMinute ?? task.startMinute,
+                durationMinutes:
+                  nextInInbox || nextIsAllDay
+                    ? undefined
+                    : updates.durationMinutes ?? task.durationMinutes,
+                inInbox: nextInInbox,
+                isAllDay: nextIsAllDay,
+                reminderMinutesBefore:
+                  nextInInbox || nextIsAllDay ? null : task.reminderMinutesBefore,
+              };
+            })()
+          : task,
+      ),
+    });
+  };
+
+  const moveTaskToTomorrow = (taskId: string) => {
+    const task = tasks.find(currentTask => currentTask.id === taskId);
+    if (!task) {
+      return;
+    }
+
+    rescheduleTask(taskId, {
+      date: shiftDateKey(task.date, 1),
+      startHour: task.startHour ?? profile.dayStartHour,
+      startMinute: task.startMinute ?? 0,
+      durationMinutes: task.durationMinutes ?? profile.defaultDurationMinutes,
+      inInbox: false,
+    });
+  };
+
   const startFocusSession = (task: Task) => {
     const nextSession: FocusSession = {
       id: `focus-${Date.now()}`,
@@ -416,6 +487,8 @@ export function FlowDayProvider({
     moveTaskToInbox,
     duplicateTask,
     scheduleInboxTask,
+    rescheduleTask,
+    moveTaskToTomorrow,
   };
 
   return <FlowDayContext.Provider value={value}>{children}</FlowDayContext.Provider>;
