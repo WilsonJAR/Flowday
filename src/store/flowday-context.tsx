@@ -1,7 +1,10 @@
-import React, { createContext, useContext, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { EditorState, TabKey, Task } from '../types';
 import { initialTasks } from '../data/mock-data';
 import { TODAY_KEY } from '../constants/planner';
+
+const STORAGE_KEY = '@flowday/app-state';
 
 type FlowDayContextValue = {
   activeTab: TabKey;
@@ -9,6 +12,7 @@ type FlowDayContextValue = {
   editorVisible: boolean;
   editorState: EditorState | null;
   isDarkMode: boolean;
+  isHydrated: boolean;
   setActiveTab: (tab: TabKey) => void;
   setIsDarkMode: (value: boolean) => void;
   setEditorState: (state: EditorState | null) => void;
@@ -36,6 +40,75 @@ export function FlowDayProvider({
   const [editorVisible, setEditorVisible] = useState(false);
   const [editorState, setEditorState] = useState<EditorState | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(initialDarkMode);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const hydrateState = async () => {
+      try {
+        const storedValue = await AsyncStorage.getItem(STORAGE_KEY);
+        if (!storedValue) {
+          return;
+        }
+
+        const parsed = JSON.parse(storedValue) as Partial<{
+          activeTab: TabKey;
+          tasks: Task[];
+          isDarkMode: boolean;
+        }>;
+
+        if (!mounted) {
+          return;
+        }
+
+        if (parsed.activeTab) {
+          setActiveTab(parsed.activeTab);
+        }
+        if (Array.isArray(parsed.tasks)) {
+          setTasks(parsed.tasks);
+        }
+        if (typeof parsed.isDarkMode === 'boolean') {
+          setIsDarkMode(parsed.isDarkMode);
+        }
+      } catch (error) {
+        console.warn('Failed to hydrate FlowDay state', error);
+      } finally {
+        if (mounted) {
+          setIsHydrated(true);
+        }
+      }
+    };
+
+    hydrateState();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isHydrated) {
+      return;
+    }
+
+    const persistState = async () => {
+      try {
+        await AsyncStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({
+            activeTab,
+            tasks,
+            isDarkMode,
+          }),
+        );
+      } catch (error) {
+        console.warn('Failed to persist FlowDay state', error);
+      }
+    };
+
+    persistState();
+  }, [activeTab, isDarkMode, isHydrated, tasks]);
 
   const openCreateModal = (inInbox = false) => {
     setEditorState({
@@ -184,6 +257,7 @@ export function FlowDayProvider({
     editorVisible,
     editorState,
     isDarkMode,
+    isHydrated,
     setActiveTab,
     setIsDarkMode,
     setEditorState,

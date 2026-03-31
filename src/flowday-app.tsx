@@ -1,5 +1,13 @@
-import React from 'react';
-import { StatusBar, StyleSheet, View, useColorScheme } from 'react-native';
+import {
+  NavigationContainer,
+  useNavigationContainerRef,
+} from '@react-navigation/native';
+import {
+  BottomTabBarProps,
+  createBottomTabNavigator,
+} from '@react-navigation/bottom-tabs';
+import React, { useEffect } from 'react';
+import { ActivityIndicator, StatusBar, StyleSheet, View, useColorScheme } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { BottomNavigation } from './components/bottom-navigation';
 import { TaskEditorModal } from './components/task-editor-modal';
@@ -10,6 +18,125 @@ import { TodayScreen } from './screens/today-screen';
 import { WeekScreen } from './screens/week-screen';
 import { FlowDayProvider, useFlowDay } from './store/flowday-context';
 import { darkTheme, lightTheme } from './theme/themes';
+import { TabKey } from './types';
+
+type RootTabParamList = {
+  Today: undefined;
+  Inbox: undefined;
+  Week: undefined;
+  More: undefined;
+};
+
+const Tab = createBottomTabNavigator<RootTabParamList>();
+
+function routeNameForTab(tab: TabKey): keyof RootTabParamList {
+  if (tab === 'inbox') {
+    return 'Inbox';
+  }
+  if (tab === 'week') {
+    return 'Week';
+  }
+  if (tab === 'more') {
+    return 'More';
+  }
+  return 'Today';
+}
+
+function tabForRouteName(routeName: keyof RootTabParamList): TabKey {
+  if (routeName === 'Inbox') {
+    return 'inbox';
+  }
+  if (routeName === 'Week') {
+    return 'week';
+  }
+  if (routeName === 'More') {
+    return 'more';
+  }
+  return 'today';
+}
+
+function AppTabBar({
+  theme,
+  openCreateModal,
+  setActiveTab,
+  navigation,
+  state,
+}: BottomTabBarProps & {
+  theme: typeof lightTheme;
+  openCreateModal: (inInbox?: boolean) => void;
+  setActiveTab: (tab: TabKey) => void;
+}) {
+  const currentRouteName = state.routes[state.index].name as keyof RootTabParamList;
+  const currentTab = tabForRouteName(currentRouteName);
+
+  return (
+    <BottomNavigation
+      theme={theme}
+      activeTab={currentTab}
+      onChangeTab={tab => {
+        setActiveTab(tab);
+        navigation.navigate(routeNameForTab(tab));
+      }}
+      onOpenEditor={() => openCreateModal(currentTab === 'inbox')}
+    />
+  );
+}
+
+function TodayTabScreen() {
+  const { openEditModal, toggleTaskComplete, duplicateTask, moveTaskToInbox, isDarkMode } =
+    useFlowDay();
+  const { todayTasks, completionRate, plannedMinutes, loadLabel, nextTask } =
+    usePlannerData();
+  const theme = isDarkMode ? darkTheme : lightTheme;
+
+  return (
+    <TodayScreen
+      theme={theme}
+      tasks={todayTasks}
+      completionRate={completionRate}
+      plannedMinutes={plannedMinutes}
+      loadLabel={loadLabel}
+      nextTask={nextTask}
+      onEditTask={openEditModal}
+      onToggleComplete={toggleTaskComplete}
+      onDuplicateTask={duplicateTask}
+      onMoveToInbox={moveTaskToInbox}
+    />
+  );
+}
+
+function InboxTabScreen() {
+  const { openCreateModal, openEditModal, scheduleInboxTask, isDarkMode } = useFlowDay();
+  const { inboxTasks } = usePlannerData();
+  const theme = isDarkMode ? darkTheme : lightTheme;
+
+  return (
+    <InboxScreen
+      theme={theme}
+      tasks={inboxTasks}
+      onAddTask={() => openCreateModal(true)}
+      onEditTask={openEditModal}
+      onScheduleTask={scheduleInboxTask}
+    />
+  );
+}
+
+function WeekTabScreen() {
+  const { isDarkMode } = useFlowDay();
+  const { todayTasks } = usePlannerData();
+  const theme = isDarkMode ? darkTheme : lightTheme;
+
+  return <WeekScreen theme={theme} tasks={todayTasks} />;
+}
+
+function MoreTabScreen() {
+  const { isDarkMode, setIsDarkMode } = useFlowDay();
+  const theme = isDarkMode ? darkTheme : lightTheme;
+
+  return (
+    <MoreScreen theme={theme} isDarkMode={isDarkMode} onToggleTheme={setIsDarkMode} />
+  );
+}
 
 function FlowDayShell() {
   const {
@@ -17,21 +144,41 @@ function FlowDayShell() {
     editorVisible,
     editorState,
     isDarkMode,
+    isHydrated,
     setActiveTab,
-    setIsDarkMode,
     setEditorState,
     openCreateModal,
-    openEditModal,
     closeEditor,
     saveTask,
-    toggleTaskComplete,
-    moveTaskToInbox,
-    duplicateTask,
-    scheduleInboxTask,
   } = useFlowDay();
-  const { todayTasks, inboxTasks, completionRate, plannedMinutes, loadLabel, nextTask } =
-    usePlannerData();
   const theme = isDarkMode ? darkTheme : lightTheme;
+  const navigationRef = useNavigationContainerRef<RootTabParamList>();
+
+  useEffect(() => {
+    if (!isHydrated || !navigationRef.isReady()) {
+      return;
+    }
+
+    const nextRoute = routeNameForTab(activeTab);
+    const currentRoute = navigationRef.getCurrentRoute()?.name;
+    if (currentRoute !== nextRoute) {
+      navigationRef.navigate(nextRoute);
+    }
+  }, [activeTab, isHydrated, navigationRef]);
+
+  if (!isHydrated) {
+    return (
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
+        <StatusBar
+          barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+          backgroundColor={theme.background}
+        />
+        <View style={styles.loadingState}>
+          <ActivityIndicator size="large" color={theme.accent} />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
@@ -40,46 +187,33 @@ function FlowDayShell() {
         backgroundColor={theme.background}
       />
       <View style={styles.appShell}>
-        <View style={styles.contentArea}>
-          {activeTab === 'today' ? (
-            <TodayScreen
-              theme={theme}
-              tasks={todayTasks}
-              completionRate={completionRate}
-              plannedMinutes={plannedMinutes}
-              loadLabel={loadLabel}
-              nextTask={nextTask}
-              onEditTask={openEditModal}
-              onToggleComplete={toggleTaskComplete}
-              onDuplicateTask={duplicateTask}
-              onMoveToInbox={moveTaskToInbox}
-            />
-          ) : null}
-          {activeTab === 'inbox' ? (
-            <InboxScreen
-              theme={theme}
-              tasks={inboxTasks}
-              onAddTask={() => openCreateModal(true)}
-              onEditTask={openEditModal}
-              onScheduleTask={scheduleInboxTask}
-            />
-          ) : null}
-          {activeTab === 'week' ? <WeekScreen theme={theme} tasks={todayTasks} /> : null}
-          {activeTab === 'more' ? (
-            <MoreScreen
-              theme={theme}
-              isDarkMode={isDarkMode}
-              onToggleTheme={setIsDarkMode}
-            />
-          ) : null}
-        </View>
-
-        <BottomNavigation
-          theme={theme}
-          activeTab={activeTab}
-          onChangeTab={setActiveTab}
-          onOpenEditor={() => openCreateModal(activeTab === 'inbox')}
-        />
+        <NavigationContainer
+          ref={navigationRef}
+          onStateChange={() => {
+            const currentRoute = navigationRef.getCurrentRoute()
+              ?.name as keyof RootTabParamList | undefined;
+            if (currentRoute) {
+              setActiveTab(tabForRouteName(currentRoute));
+            }
+          }}>
+          <Tab.Navigator
+            screenOptions={{ headerShown: false }}
+            initialRouteName={routeNameForTab(activeTab)}
+            // eslint-disable-next-line react/no-unstable-nested-components
+            tabBar={props => (
+              <AppTabBar
+                {...props}
+                theme={theme}
+                openCreateModal={openCreateModal}
+                setActiveTab={setActiveTab}
+              />
+            )}>
+            <Tab.Screen name="Today" component={TodayTabScreen} />
+            <Tab.Screen name="Inbox" component={InboxTabScreen} />
+            <Tab.Screen name="Week" component={WeekTabScreen} />
+            <Tab.Screen name="More" component={MoreTabScreen} />
+          </Tab.Navigator>
+        </NavigationContainer>
 
         <TaskEditorModal
           visible={editorVisible}
@@ -113,7 +247,9 @@ const styles = StyleSheet.create({
   appShell: {
     flex: 1,
   },
-  contentArea: {
+  loadingState: {
     flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
