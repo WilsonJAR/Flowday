@@ -1,5 +1,5 @@
 import { categories } from '../constants/planner';
-import { CategoryId, EnergyLevel, Task } from '../types';
+import { CategoryId, EnergyLevel, PriorityLevel, Task } from '../types';
 
 export function getCategory(categoryId: CategoryId) {
   return categories.find(category => category.id === categoryId) ?? categories[0];
@@ -47,6 +47,32 @@ export function energyLabel(level: EnergyLevel) {
     return 'Media';
   }
   return 'Alta';
+}
+
+export function priorityLabel(level: PriorityLevel) {
+  if (level === 'low') {
+    return 'Baja';
+  }
+  if (level === 'medium') {
+    return 'Media';
+  }
+  if (level === 'high') {
+    return 'Alta';
+  }
+  return 'Urgente';
+}
+
+export function getPriorityColor(level: PriorityLevel) {
+  if (level === 'low') {
+    return '#7CCF9A';
+  }
+  if (level === 'medium') {
+    return '#6C74FF';
+  }
+  if (level === 'high') {
+    return '#FF9F5A';
+  }
+  return '#FF6D6D';
 }
 
 export function getLoadLabel(tasks: Task[]) {

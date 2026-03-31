@@ -1,7 +1,7 @@
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Theme, Task } from '../types';
-import { getCategory } from '../utils/planner';
+import { getCategory, getPriorityColor, priorityLabel } from '../utils/planner';
 
 export function InboxScreen({
   theme,
@@ -43,7 +43,22 @@ export function InboxScreen({
                 shadowColor: theme.shadow,
               },
             ]}>
-            <Text style={[styles.inboxTitle, { color: theme.text }]}>{task.title}</Text>
+            <View style={styles.inboxHeader}>
+              <Text style={[styles.inboxTitle, { color: theme.text }]}>{task.title}</Text>
+              <View
+                style={[
+                  styles.priorityPill,
+                  { backgroundColor: getPriorityColor(task.priority) },
+                ]}>
+                <Text style={styles.priorityPillText}>{priorityLabel(task.priority)}</Text>
+              </View>
+            </View>
+            {task.subtasks.length ? (
+              <Text style={[styles.subtaskSummary, { color: theme.textMuted }]}>
+                {task.subtasks.filter(subtask => subtask.completed).length}/{task.subtasks.length}{' '}
+                subtareas
+              </Text>
+            ) : null}
             <View style={styles.inboxFooter}>
               <View style={[styles.categoryPill, { backgroundColor: category.softColor }]}>
                 <Text style={[styles.categoryPillText, { color: category.color }]}>
@@ -115,10 +130,32 @@ const styles = StyleSheet.create({
     shadowRadius: 22,
     elevation: 3,
   },
+  inboxHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 10,
+    marginBottom: 10,
+  },
   inboxTitle: {
+    flex: 1,
     fontSize: 18,
     fontWeight: '700',
-    marginBottom: 14,
+  },
+  priorityPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+  },
+  priorityPillText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  subtaskSummary: {
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: 12,
   },
   inboxFooter: {
     flexDirection: 'row',

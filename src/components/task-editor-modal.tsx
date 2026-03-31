@@ -9,10 +9,11 @@ import {
   View,
 } from 'react-native';
 import { categories, durationOptions, hourOptions, minuteOptions } from '../constants/planner';
-import { EditorState, EnergyLevel, Theme } from '../types';
-import { durationLabel, energyLabel } from '../utils/planner';
+import { EditorState, EnergyLevel, PriorityLevel, Theme } from '../types';
+import { durationLabel, energyLabel, priorityLabel } from '../utils/planner';
 
 const reminderOptions: Array<number | null> = [null, 5, 10, 15, 30, 60];
+const priorityOptions: PriorityLevel[] = ['low', 'medium', 'high', 'urgent'];
 
 export function TaskEditorModal({
   visible,
@@ -215,6 +216,32 @@ export function TaskEditorModal({
               })}
             </View>
 
+            <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Prioridad</Text>
+            <View style={styles.priorityWrap}>
+              {priorityOptions.map(level => {
+                const selected = editorState.priority === level;
+                return (
+                  <Pressable
+                    key={level}
+                    onPress={() => onChange({ ...editorState, priority: level })}
+                    style={[
+                      styles.priorityChip,
+                      {
+                        backgroundColor: selected ? theme.accent : theme.surfaceMuted,
+                      },
+                    ]}>
+                    <Text
+                      style={[
+                        styles.priorityChipText,
+                        selected ? styles.selectedChipText : { color: theme.text },
+                      ]}>
+                      {priorityLabel(level)}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
             <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>
               Recordatorio
             </Text>
@@ -245,6 +272,94 @@ export function TaskEditorModal({
                 );
               })}
             </View>
+
+            <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>
+              Subtareas (opcional)
+            </Text>
+            <View style={styles.subtaskList}>
+              {editorState.subtasks.map((subtask, index) => (
+                <View key={subtask.id} style={styles.subtaskRow}>
+                  <Pressable
+                    onPress={() =>
+                      onChange({
+                        ...editorState,
+                        subtasks: editorState.subtasks.map(currentSubtask =>
+                          currentSubtask.id === subtask.id
+                            ? {
+                                ...currentSubtask,
+                                completed: !currentSubtask.completed,
+                              }
+                            : currentSubtask,
+                        ),
+                      })
+                    }
+                    style={[
+                      styles.subtaskBullet,
+                      { borderColor: theme.textMuted },
+                      subtask.completed
+                        ? { backgroundColor: theme.accent }
+                        : styles.transparentBackground,
+                    ]}
+                  />
+                  <TextInput
+                    placeholder={`Subtarea ${index + 1}`}
+                    placeholderTextColor={theme.textMuted}
+                    value={subtask.title}
+                    onChangeText={value =>
+                      onChange({
+                        ...editorState,
+                        subtasks: editorState.subtasks.map(currentSubtask =>
+                          currentSubtask.id === subtask.id
+                            ? { ...currentSubtask, title: value }
+                            : currentSubtask,
+                        ),
+                      })
+                    }
+                    style={[
+                      styles.subtaskInput,
+                      {
+                        backgroundColor: theme.inputFill,
+                        color: theme.text,
+                      },
+                      subtask.completed ? styles.completedSubtaskInput : null,
+                    ]}
+                  />
+                  <Pressable
+                    onPress={() =>
+                      onChange({
+                        ...editorState,
+                        subtasks: editorState.subtasks.filter(
+                          currentSubtask => currentSubtask.id !== subtask.id,
+                        ),
+                      })
+                    }>
+                    <Text style={[styles.subtaskDelete, { color: theme.textMuted }]}>×</Text>
+                  </Pressable>
+                </View>
+              ))}
+            </View>
+            <Pressable
+              onPress={() =>
+                onChange({
+                  ...editorState,
+                  subtasks: [
+                    ...editorState.subtasks,
+                    {
+                      id: `subtask-${Date.now()}-${editorState.subtasks.length}`,
+                      title: '',
+                      completed: false,
+                    },
+                  ],
+                })
+              }
+              style={[
+                styles.addSubtaskButton,
+                { backgroundColor: theme.surfaceMuted, borderColor: theme.border },
+              ]}>
+              <Text style={[styles.addSubtaskText, { color: theme.accent }]}>
+                + Añadir subtarea
+              </Text>
+            </Pressable>
 
             <Text style={[styles.fieldLabel, { color: theme.textMuted }]}>Notas (opcional)</Text>
             <TextInput
@@ -449,6 +564,12 @@ const styles = StyleSheet.create({
     gap: 10,
     marginBottom: 18,
   },
+  priorityWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginBottom: 18,
+  },
   energyChip: {
     flex: 1,
     minHeight: 46,
@@ -458,6 +579,62 @@ const styles = StyleSheet.create({
   },
   energyChipText: {
     fontSize: 15,
+    fontWeight: '700',
+  },
+  priorityChip: {
+    minWidth: 92,
+    minHeight: 42,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 14,
+  },
+  priorityChipText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  subtaskList: {
+    gap: 10,
+    marginBottom: 12,
+  },
+  subtaskRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  subtaskBullet: {
+    width: 16,
+    height: 16,
+    borderRadius: 999,
+    borderWidth: 1.5,
+  },
+  subtaskInput: {
+    flex: 1,
+    minHeight: 46,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  completedSubtaskInput: {
+    textDecorationLine: 'line-through',
+  },
+  subtaskDelete: {
+    fontSize: 28,
+    lineHeight: 28,
+    width: 22,
+    textAlign: 'center',
+  },
+  addSubtaskButton: {
+    minHeight: 44,
+    borderRadius: 16,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 18,
+  },
+  addSubtaskText: {
+    fontSize: 14,
     fontWeight: '700',
   },
   notesInput: {

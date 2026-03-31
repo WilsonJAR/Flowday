@@ -1,7 +1,7 @@
 import { FocusSession, PlannerProfile, TabKey, Task } from '../types';
 
 export const FLOWDAY_STORAGE_KEY = '@flowday/app-state';
-export const FLOWDAY_STORAGE_VERSION = 1;
+export const FLOWDAY_STORAGE_VERSION = 2;
 
 export type FlowDayPersistedState = {
   version: number;

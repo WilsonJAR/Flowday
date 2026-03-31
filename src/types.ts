@@ -11,18 +11,27 @@ export type CategoryId =
   | 'reminder';
 
 export type EnergyLevel = 'low' | 'medium' | 'high';
+export type PriorityLevel = 'low' | 'medium' | 'high' | 'urgent';
+
+export type Subtask = {
+  id: string;
+  title: string;
+  completed: boolean;
+};
 
 export type Task = {
   id: string;
   title: string;
   categoryId: CategoryId;
   energyLevel: EnergyLevel;
+  priority: PriorityLevel;
   startHour?: number;
   startMinute?: number;
   durationMinutes?: number;
   reminderMinutesBefore?: number | null;
   date: string;
   notes?: string;
+  subtasks: Subtask[];
   completed: boolean;
   isAllDay?: boolean;
   inInbox?: boolean;
@@ -57,11 +66,13 @@ export type EditorState = {
   title: string;
   categoryId: CategoryId;
   energyLevel: EnergyLevel;
+  priority: PriorityLevel;
   startHour: number;
   startMinute: number;
   durationMinutes: number;
   reminderMinutesBefore: number | null;
   notes: string;
+  subtasks: Subtask[];
   isAllDay: boolean;
   inInbox: boolean;
 };

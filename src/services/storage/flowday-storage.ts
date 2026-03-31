@@ -20,11 +20,25 @@ type LegacyState = {
 function normalizePersistedState(
   rawState: Partial<FlowDayPersistedState & LegacyState>,
 ): FlowDayPersistedState {
+  const normalizedTasks = Array.isArray(rawState.tasks)
+    ? rawState.tasks.map(task => ({
+        ...task,
+        priority: task.priority ?? 'medium',
+        subtasks: Array.isArray(task.subtasks)
+          ? task.subtasks.map(subtask => ({
+              id: subtask.id,
+              title: subtask.title ?? '',
+              completed: !!subtask.completed,
+            }))
+          : [],
+      }))
+    : defaultPersistedState.tasks;
+
   return {
     version: FLOWDAY_STORAGE_VERSION,
     activeTab: rawState.activeTab ?? defaultPersistedState.activeTab,
     selectedDate: rawState.selectedDate ?? defaultPersistedState.selectedDate,
-    tasks: Array.isArray(rawState.tasks) ? rawState.tasks : defaultPersistedState.tasks,
+    tasks: normalizedTasks,
     focusSessions: Array.isArray(rawState.focusSessions)
       ? rawState.focusSessions
       : defaultPersistedState.focusSessions,

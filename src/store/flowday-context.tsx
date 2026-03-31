@@ -171,6 +171,7 @@ export function FlowDayProvider({
         title: '',
         categoryId: 'work',
         energyLevel: 'low',
+        priority: 'medium',
         startHour: profile.dayStartHour,
         startMinute: 0,
         durationMinutes: profile.defaultDurationMinutes,
@@ -178,6 +179,7 @@ export function FlowDayProvider({
           ? profile.defaultReminderMinutes
           : null,
         notes: '',
+        subtasks: [],
         isAllDay: false,
         inInbox,
       },
@@ -192,11 +194,13 @@ export function FlowDayProvider({
         title: task.title,
         categoryId: task.categoryId,
         energyLevel: task.energyLevel,
+        priority: task.priority,
         startHour: task.startHour ?? 9,
         startMinute: task.startMinute ?? 0,
         durationMinutes: task.durationMinutes ?? 60,
         reminderMinutesBefore: task.reminderMinutesBefore ?? null,
         notes: task.notes ?? '',
+        subtasks: task.subtasks,
         isAllDay: !!task.isAllDay,
         inInbox: !!task.inInbox,
       },
@@ -217,6 +221,7 @@ export function FlowDayProvider({
       title: editorState.title.trim(),
       categoryId: editorState.categoryId,
       energyLevel: editorState.energyLevel,
+      priority: editorState.priority,
       startHour: editorState.inInbox || editorState.isAllDay ? undefined : editorState.startHour,
       startMinute:
         editorState.inInbox || editorState.isAllDay ? undefined : editorState.startMinute,
@@ -227,6 +232,12 @@ export function FlowDayProvider({
       reminderMinutesBefore:
         editorState.inInbox || editorState.isAllDay ? null : editorState.reminderMinutesBefore,
       notes: editorState.notes.trim(),
+      subtasks: editorState.subtasks
+        .map(subtask => ({
+          ...subtask,
+          title: subtask.title.trim(),
+        }))
+        .filter(subtask => subtask.title.length > 0),
       completed: false,
       date: selectedDate,
       isAllDay: editorState.isAllDay,
@@ -293,6 +304,10 @@ export function FlowDayProvider({
           ...target,
           id: `${taskId}-${Date.now()}`,
           title: `${target.title} copia`,
+          subtasks: target.subtasks.map(subtask => ({
+            ...subtask,
+            id: `${subtask.id}-${Date.now()}`,
+          })),
           completed: false,
         },
       ],

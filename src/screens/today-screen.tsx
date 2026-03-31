@@ -17,6 +17,8 @@ import {
   formatMinutes,
   formatTaskTime,
   getCategory,
+  getPriorityColor,
+  priorityLabel,
 } from '../utils/planner';
 
 export function TodayScreen({
@@ -195,6 +197,8 @@ export function TodayScreen({
               const taskTitleStateStyle = task.completed
                 ? styles.completedTaskTitle
                 : styles.activeTaskTitle;
+              const completedSubtasks = task.subtasks.filter(subtask => subtask.completed).length;
+              const hasSubtasks = task.subtasks.length > 0;
 
               return (
                 <Pressable
@@ -239,15 +243,30 @@ export function TodayScreen({
                     </Text>
                     <View
                       style={[
+                        styles.priorityPill,
+                        { backgroundColor: getPriorityColor(task.priority) },
+                      ]}>
+                      <Text style={styles.priorityPillText}>{priorityLabel(task.priority)}</Text>
+                    </View>
+                    <View
+                      style={[
                         styles.categoryPill,
                         styles.transparentBorder,
                         { backgroundColor: theme.background },
                       ]}>
                       <Text style={[styles.categoryPillText, { color: category.color }]}>
-                        {category.label}
+                      {category.label}
                       </Text>
                     </View>
                   </View>
+
+                  {hasSubtasks ? (
+                    <View style={styles.subtaskProgressRow}>
+                      <Text style={[styles.subtaskProgressText, { color: theme.textSoft }]}>
+                        {completedSubtasks}/{task.subtasks.length} subtareas
+                      </Text>
+                    </View>
+                  ) : null}
 
                   {!task.completed && taskHeight > 90 && task.notes ? (
                     <Text numberOfLines={2} style={[styles.taskNotes, { color: theme.textSoft }]}>
@@ -557,9 +576,27 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 999,
   },
+  priorityPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+  },
   categoryPillText: {
     fontSize: 11,
     fontWeight: '700',
+  },
+  priorityPillText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  subtaskProgressRow: {
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  subtaskProgressText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   taskNotes: {
     marginTop: 10,
